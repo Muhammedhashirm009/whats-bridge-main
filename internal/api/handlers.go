@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"whatsbridge/internal/auth"
 	"whatsbridge/internal/bot"
 	"whatsbridge/internal/db"
 	"time"
@@ -288,6 +289,12 @@ func RequireAPIKey(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If no API keys exist, allow all (backward compatible open mode)
 		if !db.HasAnyAPIKeys() {
+			next(w, r)
+			return
+		}
+
+		// If the request has a valid dashboard session, allow it
+		if auth.IsAuthenticated(r) {
 			next(w, r)
 			return
 		}

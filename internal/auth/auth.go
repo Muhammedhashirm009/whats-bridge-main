@@ -251,3 +251,20 @@ func RequireAuthAPI(next http.HandlerFunc) http.HandlerFunc {
 		next(w, r)
 	}
 }
+
+// IsAuthenticated checks if the request has a valid session cookie.
+func IsAuthenticated(r *http.Request) bool {
+	cookie, err := r.Cookie("wb_session")
+	if err != nil {
+		return false
+	}
+
+	sessionsMu.RLock()
+	sess, ok := sessions[cookie.Value]
+	sessionsMu.RUnlock()
+
+	if !ok || time.Now().After(sess.ExpiresAt) {
+		return false
+	}
+	return true
+}
