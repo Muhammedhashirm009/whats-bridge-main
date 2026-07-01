@@ -9,23 +9,11 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 	"whatsbridge/internal/db"
 )
-
-// In-memory session store
-var (
-	sessions   = make(map[string]session)
-	sessionsMu sync.RWMutex
-)
-
-type session struct {
-	Username  string
-	ExpiresAt time.Time
-}
 
 // InitUsers creates the users table and seeds the default admin user.
 func InitUsers() {
@@ -45,6 +33,7 @@ func InitUsers() {
 	seedUsers()
 }
 
+// seedUsers creates the users and sessions tables and seeds the default admin user.
 func seedUsers() {
 	_, err := db.LocalDB.Exec(`CREATE TABLE IF NOT EXISTS users (
 		id INT AUTO_INCREMENT PRIMARY KEY,
@@ -54,6 +43,17 @@ func seedUsers() {
 	)`)
 	if err != nil {
 		log.Printf("Auth: failed to create users table: %v", err)
+		return
+	}
+
+	_, err = db.LocalDB.Exec(`CREATE TABLE IF NOT EXISTS sessions (
+		token VARCHAR(64) PRIMARY KEY,
+		username VARCHAR(100) NOT NULL,
+		expires_at DATETIME NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)`)
+	if err != nil {
+		log.Printf("Auth: failed to create sessions table: %v", err)
 		return
 	}
 
@@ -125,7 +125,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if db.LocalDB == nil {
+	database := db.GetDB()
+	if database == nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusServiceUnavailable)
 		json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "Database not ready"})
@@ -133,7 +134,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var storedHash string
-	err := db.LocalDB.QueryRow("SELECT password_hash FROM users WHERE username = ?", req.Username).Scan(&storedHash)
+	err := database.QueryRow("SELECT password_hash FROM users WHERE username = ?", req.Username).Scan(&storedHash)
 	if err == sql.ErrNoRows {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -162,12 +163,22 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "Failed to create session"})
 		return
 	}
-	sessionsMu.Lock()
-	sessions[token] = session{
-		Username:  req.Username,
-		ExpiresAt: time.Now().Add(30 * 24 * time.Hour), // 30 days
+
+	expiresAt := time.Now().Add(30 * 24 * time.Hour)
+	
+	// Clean up expired sessions periodically on login
+	_, _ = database.Exec("DELETE FROM sessions WHERE expires_at < NOW()")
+
+	_, err = database.Exec(
+		"INSERT INTO sessions (token, username, expires_at) VALUES (?, ?, ?)",
+		token, req.Username, expiresAt,
+	)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "Failed to store session"})
+		return
 	}
-	sessionsMu.Unlock()
 
 	// Determine cookie security based on environment
 	isProduction := os.Getenv("APP_ENV") == "production"
@@ -194,9 +205,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 func AuthLogoutHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("wb_session")
 	if err == nil {
-		sessionsMu.Lock()
-		delete(sessions, cookie.Value)
-		sessionsMu.Unlock()
+		database := db.GetDB()
+		if database != nil {
+			_, _ = database.Exec("DELETE FROM sessions WHERE token = ?", cookie.Value)
+		}
 	}
 
 	http.SetCookie(w, &http.Cookie{
@@ -219,18 +231,31 @@ func CheckAuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionsMu.RLock()
-	sess, ok := sessions[cookie.Value]
-	sessionsMu.RUnlock()
+	database := db.GetDB()
+	if database == nil {
+		json.NewEncoder(w).Encode(map[string]interface{}{"authenticated": false})
+		return
+	}
 
-	if !ok || time.Now().After(sess.ExpiresAt) {
+	var username string
+	var expiresAt time.Time
+	err = database.QueryRow(
+		"SELECT username, expires_at FROM sessions WHERE token = ?",
+		cookie.Value,
+	).Scan(&username, &expiresAt)
+
+	if err != nil || time.Now().After(expiresAt) {
+		if err == nil {
+			// Clean up expired session
+			_, _ = database.Exec("DELETE FROM sessions WHERE token = ?", cookie.Value)
+		}
 		json.NewEncoder(w).Encode(map[string]interface{}{"authenticated": false})
 		return
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"authenticated": true,
-		"username":      sess.Username,
+		"username":      username,
 	})
 }
 
@@ -243,20 +268,33 @@ func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		sessionsMu.RLock()
-		sess, ok := sessions[cookie.Value]
-		sessionsMu.RUnlock()
+		database := db.GetDB()
+		if database == nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
 
-		if !ok || time.Now().After(sess.ExpiresAt) {
+		var username string
+		var expiresAt time.Time
+		err = database.QueryRow(
+			"SELECT username, expires_at FROM sessions WHERE token = ?",
+			cookie.Value,
+		).Scan(&username, &expiresAt)
+
+		if err != nil || time.Now().After(expiresAt) {
+			if err == nil {
+				_, _ = database.Exec("DELETE FROM sessions WHERE token = ?", cookie.Value)
+			}
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
 
 		// Refresh session expiry on activity
-		sessionsMu.Lock()
-		sess.ExpiresAt = time.Now().Add(30 * 24 * time.Hour)
-		sessions[cookie.Value] = sess
-		sessionsMu.Unlock()
+		newExpiry := time.Now().Add(30 * 24 * time.Hour)
+		_, _ = database.Exec(
+			"UPDATE sessions SET expires_at = ? WHERE token = ?",
+			newExpiry, cookie.Value,
+		)
 
 		next(w, r)
 	}
@@ -273,11 +311,25 @@ func RequireAuthAPI(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		sessionsMu.RLock()
-		sess, ok := sessions[cookie.Value]
-		sessionsMu.RUnlock()
+		database := db.GetDB()
+		if database == nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			fmt.Fprintf(w, `{"error":"Database not ready"}`)
+			return
+		}
 
-		if !ok || time.Now().After(sess.ExpiresAt) {
+		var username string
+		var expiresAt time.Time
+		err = database.QueryRow(
+			"SELECT username, expires_at FROM sessions WHERE token = ?",
+			cookie.Value,
+		).Scan(&username, &expiresAt)
+
+		if err != nil || time.Now().After(expiresAt) {
+			if err == nil {
+				_, _ = database.Exec("DELETE FROM sessions WHERE token = ?", cookie.Value)
+			}
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
 			fmt.Fprintf(w, `{"error":"Session expired"}`)
@@ -295,11 +347,18 @@ func IsAuthenticated(r *http.Request) bool {
 		return false
 	}
 
-	sessionsMu.RLock()
-	sess, ok := sessions[cookie.Value]
-	sessionsMu.RUnlock()
+	database := db.GetDB()
+	if database == nil {
+		return false
+	}
 
-	if !ok || time.Now().After(sess.ExpiresAt) {
+	var expiresAt time.Time
+	err = database.QueryRow(
+		"SELECT expires_at FROM sessions WHERE token = ?",
+		cookie.Value,
+	).Scan(&expiresAt)
+
+	if err != nil || time.Now().After(expiresAt) {
 		return false
 	}
 	return true
