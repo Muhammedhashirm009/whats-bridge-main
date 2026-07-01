@@ -17,7 +17,8 @@ import (
 
 func StatusHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	if bot.GlobalClient == nil {
+	client := bot.GetClient()
+	if client == nil {
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"connected": false,
 			"loggedIn":  false,
@@ -26,8 +27,8 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"connected": bot.GlobalClient.IsConnected(),
-		"loggedIn":  bot.GlobalClient.IsLoggedIn(),
+		"connected": client.IsConnected(),
+		"loggedIn":  client.IsLoggedIn(),
 	})
 }
 
@@ -37,9 +38,13 @@ func SendHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Limit request body to 50MB for multipart uploads
+	r.Body = http.MaxBytesReader(w, r.Body, 50<<20)
+
 	w.Header().Set("Content-Type", "application/json")
 
-	if bot.GlobalClient == nil || !bot.GlobalClient.IsConnected() || !bot.GlobalClient.IsLoggedIn() {
+	client := bot.GetClient()
+	if client == nil || !client.IsConnected() || !client.IsLoggedIn() {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
@@ -60,7 +65,12 @@ func SendHandler(w http.ResponseWriter, r *http.Request) {
 		file, header, err := r.FormFile("file")
 		if err == nil {
 			defer file.Close()
-			fileBytes, _ = io.ReadAll(file)
+			fileBytes, err = io.ReadAll(file)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "Failed to read uploaded file"})
+				return
+			}
 			fileName = header.Filename
 		}
 	} else {
@@ -93,15 +103,25 @@ func SendHandler(w http.ResponseWriter, r *http.Request) {
 
 	var sendErr error
 	if len(fileBytes) > 0 {
-		tmpFile := fmt.Sprintf("temp_%s", fileName)
-		err = os.WriteFile(tmpFile, fileBytes, 0644)
+		// Use secure temp file to prevent path traversal
+		tmpFile, err := os.CreateTemp("", "wb-upload-*")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "Internal error saving file"})
 			return
 		}
-		defer os.Remove(tmpFile)
-		sendErr = bot.SendMediaMessage(to, tmpFile, message)
+		tmpPath := tmpFile.Name()
+		defer os.Remove(tmpPath)
+
+		if _, err := tmpFile.Write(fileBytes); err != nil {
+			tmpFile.Close()
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "Internal error saving file"})
+			return
+		}
+		tmpFile.Close()
+
+		sendErr = bot.SendMediaMessage(to, tmpPath, message)
 	} else {
 		if message == "" {
 			w.WriteHeader(http.StatusBadRequest)
@@ -142,6 +162,10 @@ func ScheduleHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	// Limit request body to 1MB
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
 	w.Header().Set("Content-Type", "application/json")
 
 	var req struct {
@@ -178,6 +202,10 @@ func BulkSendHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	// Limit request body to 1MB
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
 	w.Header().Set("Content-Type", "application/json")
 
 	var req struct {
@@ -194,9 +222,17 @@ func BulkSendHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Cap bulk send to prevent abuse
+	if len(req.Messages) > 1000 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "Maximum 1000 messages per bulk send"})
+		return
+	}
+
 	go func() {
 		for _, m := range req.Messages {
-			if bot.GlobalClient == nil || !bot.GlobalClient.IsConnected() || !bot.GlobalClient.IsLoggedIn() {
+			client := bot.GetClient()
+			if client == nil || !client.IsConnected() || !client.IsLoggedIn() {
 				break
 			}
 			bot.SendTextMessage(m.To, m.Message)
@@ -228,9 +264,14 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	// Limit request body to 1MB
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
 	w.Header().Set("Content-Type", "application/json")
 
-	if bot.GlobalClient == nil {
+	client := bot.GetClient()
+	if client == nil {
 		json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "Bot not initialized"})
 		return
 	}
@@ -249,14 +290,19 @@ func ConnectHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	// Limit request body to 1MB
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
 	w.Header().Set("Content-Type", "application/json")
 
-	if bot.GlobalClient == nil {
+	client := bot.GetClient()
+	if client == nil {
 		json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "Bot not initialized"})
 		return
 	}
 
-	err := bot.GlobalClient.Connect()
+	err := client.Connect()
 	if err != nil {
 		json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": err.Error()})
 		return
@@ -270,14 +316,19 @@ func DisconnectHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	// Limit request body to 1MB
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
 	w.Header().Set("Content-Type", "application/json")
 
-	if bot.GlobalClient == nil {
+	client := bot.GetClient()
+	if client == nil {
 		json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "Bot not initialized"})
 		return
 	}
 
-	bot.GlobalClient.Disconnect()
+	client.Disconnect()
 	json.NewEncoder(w).Encode(map[string]interface{}{"success": true})
 }
 
@@ -359,6 +410,10 @@ func APIKeysCreateHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	// Limit request body to 1MB
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
 	w.Header().Set("Content-Type", "application/json")
 
 	var req struct {
@@ -389,6 +444,10 @@ func APIKeysDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	// Limit request body to 1MB
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
 	w.Header().Set("Content-Type", "application/json")
 
 	var req struct {
@@ -402,7 +461,13 @@ func APIKeysDeleteHandler(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "ID is required"})
 			return
 		}
-		req.ID, _ = strconv.Atoi(idStr)
+		var parseErr error
+		req.ID, parseErr = strconv.Atoi(idStr)
+		if parseErr != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "Invalid ID format"})
+			return
+		}
 	}
 
 	if err := db.DeleteAPIKey(req.ID); err != nil {
@@ -413,4 +478,3 @@ func APIKeysDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(map[string]interface{}{"success": true})
 }
-

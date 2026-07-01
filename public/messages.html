@@ -1,225 +1,1103 @@
 <!DOCTYPE html>
-<html class="light" lang="en"><head>
+<html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Messages | WhatsBridge</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+<meta name="description" content="Send single messages, bulk dispatch, or schedule WhatsApp messages for later delivery with WhatsBridge."/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-  tailwind.config = {
-    darkMode: "class",
-    theme: {
-      extend: {
-        colors: {
-          "surface-container-lowest": "#ffffff", "surface": "#f7f9fc", "primary": "#00453d",
-          "on-primary": "#ffffff", "on-error-container": "#93000a", "background": "#f7f9fc",
-          "outline": "#6f7976", "primary-fixed": "#a8f0e3", "primary-container": "#075e54",
-          "surface-container-high": "#e6e8eb", "on-surface": "#191c1e", "error": "#ba1a1a",
-          "surface-container-highest": "#e0e3e6", "surface-container-low": "#f2f4f7",
-          "secondary-container": "#5dfd8a", "surface-variant": "#e0e3e6",
-          "error-container": "#ffdad6", "surface-container": "#eceef1",
-          "on-surface-variant": "#3f4946", "outline-variant": "#bec9c5",
-          "on-primary-container": "#8dd5c8", "secondary": "#006d2f",
-          "on-secondary-container": "#007232"
-        },
-        fontFamily: { "headline": ["Manrope"], "body": ["Inter"], "label": ["Inter"] },
-        borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
-      },
-    },
-  }
-</script>
 <style>
+  /* ── Design System ── */
+  :root {
+    --bg-primary: #0a0a0f;
+    --bg-card: #12121a;
+    --bg-input: #1a1a2e;
+    --accent: #10b981;
+    --accent-hover: #059669;
+    --accent-glow: rgba(16,185,129,0.18);
+    --secondary: #6366f1;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --border: rgba(255,255,255,0.08);
+    --danger: #ef4444;
+    --amber: #f59e0b;
+    --radius: 14px;
+    --transition: 0.25s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4 { font-family: 'Inter', sans-serif; font-weight: 700; }
   .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-  body { font-family: 'Inter', sans-serif; }
-  h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    display: none;
+    flex-direction: column;
+    width: 260px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    padding: 28px 16px;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border);
+    z-index: 40;
+  }
+  @media (min-width: 768px) {
+    .sidebar { display: flex; }
+  }
+
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 8px;
+    margin-bottom: 32px;
+  }
+  .sidebar-logo-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--accent), var(--secondary));
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    box-shadow: 0 4px 24px rgba(16,185,129,0.25);
+    flex-shrink: 0;
+  }
+  .sidebar-logo-icon .material-symbols-outlined { font-size: 22px; }
+  .sidebar-logo h1 {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+    letter-spacing: -0.3px;
+  }
+  .sidebar-logo p {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+
+  /* Status Indicator */
+  .status-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--bg-input);
+    border-radius: 12px;
+    margin: 0 8px 24px;
+    border: 1px solid var(--border);
+  }
+  .status-box .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #eab308;
+    flex-shrink: 0;
+  }
+  .status-box .dot.pulsing { animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+  }
+  .status-box span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  /* Nav links */
+  .sidebar nav { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: 11px;
+    transition: all var(--transition);
+    position: relative;
+  }
+  .nav-link .material-symbols-outlined { font-size: 21px; }
+  .nav-link:hover {
+    color: var(--accent);
+    background: rgba(16,185,129,0.07);
+  }
+  .nav-link.active {
+    color: var(--accent);
+    font-weight: 600;
+    background: rgba(16,185,129,0.06);
+  }
+  .nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: -16px;
+    width: 3px;
+    height: 24px;
+    background: var(--accent);
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* Compose Button */
+  .compose-btn {
+    margin-top: auto;
+    padding-top: 24px;
+  }
+  .compose-btn button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 24px rgba(16,185,129,0.3);
+    transition: all var(--transition);
+    font-family: 'Inter', sans-serif;
+  }
+  .compose-btn button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(16,185,129,0.4);
+  }
+  .compose-btn button:active { transform: scale(0.97); }
+
+  /* ── Main Content ── */
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding-bottom: 80px;
+  }
+  @media (min-width: 768px) {
+    .main-content { padding-bottom: 0; }
+  }
+  .main-inner {
+    padding: 28px 20px;
+    max-width: 920px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  @media (min-width: 768px) {
+    .main-inner { padding: 48px 40px; }
+  }
+
+  /* Page Header */
+  .page-header { }
+  .page-header .label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .page-header h2 {
+    font-size: 30px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--text-primary) 30%, var(--text-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+  }
+  @media (min-width: 768px) {
+    .page-header h2 { font-size: 34px; }
+  }
+  .page-header .subtitle {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-top: 8px;
+    max-width: 520px;
+    line-height: 1.7;
+  }
+
+  /* ── Tab Selector ── */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-card);
+    padding: 5px;
+    border-radius: var(--radius);
+    width: fit-content;
+    border: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+  }
+  .tab-btn {
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition);
+    background: transparent;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .tab-btn .material-symbols-outlined { font-size: 17px; }
+  .tab-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.04);
+  }
+  .tab-btn.active {
+    background: var(--accent) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 16px rgba(16,185,129,0.35);
+  }
+
+  /* ── Card / Section ── */
+  .tab-content {
+    background: rgba(18,18,26,0.75);
+    border-radius: 20px;
+    padding: 28px 24px;
+    border: 1px solid var(--border);
+    backdrop-filter: blur(24px);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+    animation: fadeIn 0.35s ease;
+  }
+  @media (min-width: 768px) {
+    .tab-content { padding: 36px 32px; }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .tab-content.hidden { display: none; }
+
+  .section-title {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title .material-symbols-outlined {
+    color: var(--accent);
+    font-size: 22px;
+  }
+
+  /* ── Form Elements ── */
+  .form-group {
+    margin-bottom: 22px;
+  }
+  .form-group:last-of-type { margin-bottom: 28px; }
+  .form-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .form-input,
+  .form-textarea,
+  .form-select {
+    width: 100%;
+    padding: 14px 18px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all var(--transition);
+    outline: none;
+  }
+  .form-input:focus,
+  .form-textarea:focus,
+  .form-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+    background: rgba(26,26,46,0.9);
+  }
+  .form-input::placeholder,
+  .form-textarea::placeholder {
+    color: rgba(148,163,184,0.45);
+  }
+  .form-textarea { resize: none; line-height: 1.7; }
+
+  .input-with-icon {
+    position: relative;
+  }
+  .input-with-icon .material-symbols-outlined {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 20px;
+    pointer-events: none;
+  }
+  .input-with-icon .form-input {
+    padding-left: 48px;
+  }
+
+  .form-hint {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    opacity: 0.7;
+  }
+
+  /* Number input */
+  .form-input-short {
+    width: 180px;
+    padding: 12px 18px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all var(--transition);
+    outline: none;
+  }
+  .form-input-short:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  /* File Input */
+  .file-input-wrapper {
+    position: relative;
+  }
+  .file-input-wrapper input[type="file"] {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg-input);
+    border: 1px dashed rgba(255,255,255,0.12);
+    border-radius: 12px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .file-input-wrapper input[type="file"]:hover {
+    border-color: var(--accent);
+    background: rgba(16,185,129,0.04);
+  }
+  .file-input-wrapper input[type="file"]::file-selector-button {
+    padding: 8px 16px;
+    margin-right: 12px;
+    background: rgba(16,185,129,0.12);
+    color: var(--accent);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .file-input-wrapper input[type="file"]::file-selector-button:hover {
+    background: rgba(16,185,129,0.22);
+  }
+
+  /* Date/Time picker */
+  input[type="datetime-local"] {
+    color-scheme: dark;
+  }
+
+  /* Mono textarea */
+  .form-textarea-mono {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── Grid layout ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 768px) {
+    .form-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 24px rgba(16,185,129,0.3);
+    transition: all var(--transition);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 32px rgba(16,185,129,0.4);
+  }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none;
+  }
+  .btn-primary .material-symbols-outlined { font-size: 18px; }
+
+  /* ── Feedback ── */
+  .feedback {
+    display: none;
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+  }
+
+  /* ── Status Badges ── */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .status-badge.pending {
+    background: rgba(245,158,11,0.12);
+    color: #fbbf24;
+    border: 1px solid rgba(245,158,11,0.2);
+  }
+  .status-badge.sent {
+    background: rgba(16,185,129,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(16,185,129,0.2);
+  }
+  .status-badge.failed {
+    background: rgba(239,68,68,0.12);
+    color: var(--danger);
+    border: 1px solid rgba(239,68,68,0.2);
+  }
+  .status-badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .status-badge.pending .status-badge-dot { background: #fbbf24; }
+  .status-badge.sent .status-badge-dot { background: var(--accent); }
+  .status-badge.failed .status-badge-dot { background: var(--danger); }
+
+  /* ── Bulk Counter ── */
+  .bulk-counter {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--bg-input);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin-bottom: 22px;
+    transition: all var(--transition);
+  }
+  .bulk-counter.warning {
+    border-color: rgba(245,158,11,0.3);
+    background: rgba(245,158,11,0.06);
+  }
+  .bulk-counter.danger {
+    border-color: rgba(239,68,68,0.3);
+    background: rgba(239,68,68,0.06);
+  }
+  .bulk-counter-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: rgba(16,185,129,0.1);
+    transition: background var(--transition);
+  }
+  .bulk-counter-icon .material-symbols-outlined {
+    font-size: 18px;
+    color: var(--accent);
+    transition: color var(--transition);
+  }
+  .bulk-counter.warning .bulk-counter-icon {
+    background: rgba(245,158,11,0.1);
+  }
+  .bulk-counter.warning .bulk-counter-icon .material-symbols-outlined {
+    color: #fbbf24;
+  }
+  .bulk-counter.danger .bulk-counter-icon {
+    background: rgba(239,68,68,0.1);
+  }
+  .bulk-counter.danger .bulk-counter-icon .material-symbols-outlined {
+    color: var(--danger);
+  }
+  .bulk-counter-info { flex: 1; }
+  .bulk-counter-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+  }
+  .bulk-counter-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+  .bulk-counter-value .limit {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .bulk-counter-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+  .bulk-counter-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+    transition: all 0.4s ease;
+    min-width: 0;
+  }
+  .bulk-counter.warning .bulk-counter-fill { background: #fbbf24; }
+  .bulk-counter.danger .bulk-counter-fill { background: var(--danger); }
+
+  .limit-warning {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    animation: fadeIn 0.3s ease;
+    background: rgba(239,68,68,0.08);
+    color: var(--danger);
+    border: 1px solid rgba(239,68,68,0.15);
+  }
+  .limit-warning .material-symbols-outlined { font-size: 18px; }
+  .limit-warning.visible { display: flex; }
+
+  /* ── Mobile Bottom Nav ── */
+  .mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(18,18,26,0.95);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid var(--border);
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 0 max(10px, env(safe-area-inset-bottom));
+    z-index: 50;
+  }
+  @media (min-width: 768px) {
+    .mobile-nav { display: none; }
+  }
+  .mobile-nav a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 500;
+    transition: color var(--transition);
+    padding: 4px 6px;
+  }
+  .mobile-nav a .material-symbols-outlined { font-size: 22px; }
+  .mobile-nav a:hover { color: var(--accent); }
+  .mobile-nav a.active { color: var(--accent); }
+  .mobile-nav a.active span:last-child { font-weight: 700; }
+
+  /* ── Decorative elements ── */
+  .glow-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.06;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .glow-orb-1 {
+    width: 550px;
+    height: 550px;
+    background: var(--accent);
+    top: -120px;
+    right: -120px;
+  }
+  .glow-orb-2 {
+    width: 400px;
+    height: 400px;
+    background: var(--secondary);
+    bottom: -80px;
+    left: -80px;
+  }
+
+  /* ── Schedule info box ── */
+  .schedule-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(99,102,241,0.06);
+    border: 1px solid rgba(99,102,241,0.12);
+    border-radius: 12px;
+    margin-bottom: 24px;
+  }
+  .schedule-info .material-symbols-outlined {
+    color: var(--secondary);
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .schedule-info p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* ── Divider ── */
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+  }
+
+  /* ── Helper ── */
+  .opacity-60 { opacity: 0.6; }
 </style>
 </head>
-<body class="bg-surface text-on-surface min-h-screen flex">
-<!-- SideNavBar -->
-<aside class="hidden md:flex flex-col h-screen sticky top-0 py-6 px-4 w-64 border-r border-slate-100 bg-slate-50">
-<div class="flex items-center gap-3 px-2 mb-8">
-  <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-on-primary shadow-lg shadow-primary/20">
-    <span class="material-symbols-outlined">qr_code_2</span>
-  </div>
-  <div>
-    <h1 class="text-lg font-extrabold text-emerald-950 leading-none">WhatsBridge</h1>
-    <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-1">by ERPAGENT</p>
-  </div>
-</div>
-<!-- Status Indicator -->
-<div class="px-2 mb-4">
-  <div class="flex items-center gap-2 px-3 py-2 bg-surface-container-high rounded-xl">
-    <div id="status-dot" class="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse"></div>
-    <span id="status-text" class="text-xs font-semibold text-on-surface-variant">Checking...</span>
-  </div>
-</div>
-<nav class="flex-1 space-y-1">
-  <a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all rounded-lg" href="/">
-    <span class="material-symbols-outlined">dashboard</span><span>Dashboard</span>
-  </a>
-  <a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all rounded-lg" href="/connect">
-    <span class="material-symbols-outlined">qr_code_2</span><span>Connect</span>
-  </a>
-  <a class="relative flex items-center gap-3 px-3 py-2.5 text-emerald-700 font-semibold before:absolute before:left-[-16px] before:w-1 before:h-8 before:bg-emerald-600 before:rounded-r-full rounded-lg" href="/messages">
-    <span class="material-symbols-outlined">history_edu</span><span>Messages</span>
-  </a>
-  <a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all rounded-lg" href="/chat">
-    <span class="material-symbols-outlined">chat_bubble</span><span>Chat</span>
-  </a>
-</nav>
-<div class="mt-auto pt-6 space-y-1">
-  <button id="openComposeBtn" class="w-full bg-primary text-on-primary py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 mb-6 shadow-md hover:opacity-90 active:scale-95 transition-all">
-    <span class="material-symbols-outlined text-sm">add</span> New Message
-  </button>
-</div>
-</aside>
+<body>
 
-<!-- Main Content -->
-<main class="flex-1 flex flex-col min-w-0 bg-surface">
-<div class="p-8 flex flex-col gap-8 max-w-7xl mx-auto w-full">
-  <!-- Page Header -->
-  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<!-- Decorative Glow Orbs -->
+<div class="glow-orb glow-orb-1"></div>
+<div class="glow-orb glow-orb-2"></div>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">
+      <span class="material-symbols-outlined">qr_code_2</span>
+    </div>
     <div>
-      <span class="text-primary font-bold tracking-widest text-[10px] uppercase">Message Management</span>
-      <h3 class="text-4xl font-extrabold text-on-surface mt-1 tracking-tight">Send & Schedule</h3>
-      <p class="text-on-surface-variant mt-2 max-w-lg">Send single messages, bulk dispatch, or schedule for later delivery.</p>
+      <h1>WhatsBridge</h1>
+      <p>by ERPAGENT</p>
     </div>
   </div>
 
-  <!-- Tab Selector -->
-  <div class="flex gap-2 bg-surface-container-low p-1 rounded-xl w-fit">
-    <button class="tab-btn active px-4 py-2 rounded-lg text-sm font-semibold transition-all" data-tab="single">Single Send</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all" data-tab="bulk">Bulk Dispatch</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all" data-tab="schedule">Schedule</button>
+  <!-- Status Indicator -->
+  <div class="status-box">
+    <div id="status-dot" class="dot pulsing"></div>
+    <span id="status-text">Checking...</span>
   </div>
 
-  <!-- Single Send Tab -->
-  <section id="tab-single" class="tab-content bg-surface-container-lowest rounded-2xl p-8 shadow-sm border border-outline-variant/10">
-    <h4 class="text-xl font-bold font-headline text-primary mb-6">Send a Message</h4>
-    <form id="sendMessageForm" class="space-y-6">
-      <div class="space-y-2">
-        <label class="text-[10px] font-bold uppercase tracking-widest text-outline">Recipient Phone</label>
-        <div class="relative">
-          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-xl">call</span>
-          <input type="text" id="phoneNumber" placeholder="e.g. 15551234567" required autocomplete="off"
-            class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-outline/60"/>
+  <nav>
+    <a class="nav-link" href="/">
+      <span class="material-symbols-outlined">dashboard</span><span>Dashboard</span>
+    </a>
+    <a class="nav-link" href="/connect">
+      <span class="material-symbols-outlined">qr_code_2</span><span>Connect</span>
+    </a>
+    <a class="nav-link active" href="/messages">
+      <span class="material-symbols-outlined">history_edu</span><span>Messages</span>
+    </a>
+    <a class="nav-link" href="/chat">
+      <span class="material-symbols-outlined">chat_bubble</span><span>Chat</span>
+    </a>
+    <a class="nav-link" href="/api-keys">
+      <span class="material-symbols-outlined">key</span><span>API Keys</span>
+    </a>
+  </nav>
+
+  <div class="compose-btn">
+    <button id="openComposeBtn">
+      <span class="material-symbols-outlined" style="font-size:18px;">add</span> New Message
+    </button>
+  </div>
+</aside>
+
+<!-- ── Main Content ── -->
+<main class="main-content">
+<div class="main-inner">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="label">Message Management</div>
+    <h2>Send &amp; Schedule</h2>
+    <p class="subtitle">Send single messages, bulk dispatch, or schedule for later delivery.</p>
+  </div>
+
+  <!-- Tab Selector -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="single">
+      <span class="material-symbols-outlined">send</span> Single Send
+    </button>
+    <button class="tab-btn" data-tab="bulk">
+      <span class="material-symbols-outlined">campaign</span> Bulk Dispatch
+    </button>
+    <button class="tab-btn" data-tab="schedule">
+      <span class="material-symbols-outlined">schedule_send</span> Schedule
+    </button>
+  </div>
+
+  <!-- ── Single Send Tab ── -->
+  <section id="tab-single" class="tab-content">
+    <div class="section-title">
+      <span class="material-symbols-outlined">send</span>
+      Send a Message
+    </div>
+    <form id="sendMessageForm">
+      <div class="form-group">
+        <label class="form-label" for="phoneNumber">Recipient Phone</label>
+        <div class="input-with-icon">
+          <span class="material-symbols-outlined">call</span>
+          <input type="text" id="phoneNumber" class="form-input" placeholder="e.g. 15551234567" required autocomplete="off"/>
         </div>
       </div>
-      <div class="space-y-2">
-        <label class="text-[10px] font-bold uppercase tracking-widest text-outline">Attach File (Optional)</label>
-        <input type="file" id="fileAttachment" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-semibold hover:file:bg-primary/20"/>
+      <div class="form-group">
+        <label class="form-label" for="fileAttachment">Attach File (Optional)</label>
+        <div class="file-input-wrapper">
+          <input type="file" id="fileAttachment"/>
+        </div>
       </div>
-      <div class="space-y-2">
-        <label class="text-[10px] font-bold uppercase tracking-widest text-outline">Message</label>
-        <textarea id="messageBody" rows="4" placeholder="Type your message here..."
-          class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-outline/60 resize-none"></textarea>
+      <div class="form-group">
+        <label class="form-label" for="messageBody">Message</label>
+        <textarea id="messageBody" class="form-textarea" rows="4" placeholder="Type your message here..."></textarea>
       </div>
-      <button type="submit" id="sendBtn" class="flex items-center gap-2 px-8 py-3 bg-primary text-on-primary font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-        <span class="material-symbols-outlined text-sm">send</span>
+      <button type="submit" id="sendBtn" class="btn-primary">
+        <span class="material-symbols-outlined">send</span>
         <span class="btn-text">Send Instantly</span>
       </button>
     </form>
-    <div id="singleFeedback" class="hidden mt-4 px-4 py-3 rounded-xl text-sm font-medium text-center"></div>
+    <div id="singleFeedback" class="feedback"></div>
   </section>
 
-  <!-- Bulk Dispatch Tab -->
-  <section id="tab-bulk" class="tab-content hidden bg-surface-container-lowest rounded-2xl p-8 shadow-sm border border-outline-variant/10">
-    <h4 class="text-xl font-bold font-headline text-primary mb-6">Bulk Dispatch</h4>
-    <form id="bulkForm" class="space-y-6">
-      <div class="space-y-2">
-        <label class="text-[10px] font-bold uppercase tracking-widest text-outline">Delay Between Sends (ms)</label>
-        <input type="number" id="bulkDelay" value="2000" min="0" step="100"
-          class="w-48 bg-surface-container-low border-none rounded-xl py-3 px-5 text-sm focus:ring-2 focus:ring-primary/20"/>
-        <span class="block text-xs text-outline mt-1">Prevents rate-limiting by WhatsApp.</span>
+  <!-- ── Bulk Dispatch Tab ── -->
+  <section id="tab-bulk" class="tab-content hidden">
+    <div class="section-title">
+      <span class="material-symbols-outlined">campaign</span>
+      Bulk Dispatch
+    </div>
+    <form id="bulkForm">
+      <div class="form-group">
+        <label class="form-label" for="bulkDelay">Delay Between Sends (ms)</label>
+        <input type="number" id="bulkDelay" class="form-input-short" value="2000" min="0" step="100"/>
+        <span class="form-hint">Prevents rate-limiting by WhatsApp.</span>
       </div>
-      <div class="space-y-2">
-        <label class="text-[10px] font-bold uppercase tracking-widest text-outline">Recipient Data (CSV)</label>
-        <textarea id="bulkData" rows="6" required
-          placeholder="15551234567, Hello friend!&#10;919876543210, Broadcast message&#10;13334445555, Reminder: appointment tomorrow"
-          class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-outline/60 resize-none font-mono"></textarea>
-        <span class="text-xs text-outline">Format: Phone, Message (one per line)</span>
+
+      <!-- Bulk Message Counter -->
+      <div id="bulkCounter" class="bulk-counter">
+        <div class="bulk-counter-icon">
+          <span class="material-symbols-outlined">format_list_numbered</span>
+        </div>
+        <div class="bulk-counter-info">
+          <div class="bulk-counter-label">Messages queued</div>
+          <div class="bulk-counter-value">
+            <span id="bulkCount">0</span> <span class="limit">/ 1,000</span>
+          </div>
+          <div class="bulk-counter-bar">
+            <div id="bulkCounterFill" class="bulk-counter-fill" style="width:0%"></div>
+          </div>
+        </div>
       </div>
-      <button type="submit" id="bulkBtn" class="flex items-center gap-2 px-8 py-3 bg-primary text-on-primary font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-        <span class="material-symbols-outlined text-sm">campaign</span>
+
+      <!-- Limit Warning -->
+      <div id="bulkLimitWarning" class="limit-warning">
+        <span class="material-symbols-outlined">warning</span>
+        <span>Maximum 1,000 messages per batch. Reduce entries to continue.</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="bulkData">Recipient Data (CSV)</label>
+        <textarea id="bulkData" class="form-textarea form-textarea-mono" rows="7" required
+          placeholder="15551234567, Hello friend!&#10;919876543210, Broadcast message&#10;13334445555, Reminder: appointment tomorrow"></textarea>
+        <span class="form-hint">Format: Phone, Message (one per line)</span>
+      </div>
+      <button type="submit" id="bulkBtn" class="btn-primary">
+        <span class="material-symbols-outlined">campaign</span>
         <span class="btn-text">Start Bulk Dispatch</span>
       </button>
     </form>
-    <div id="bulkFeedback" class="hidden mt-4 px-4 py-3 rounded-xl text-sm font-medium text-center"></div>
+    <div id="bulkFeedback" class="feedback"></div>
   </section>
 
-  <!-- Schedule Tab -->
-  <section id="tab-schedule" class="tab-content hidden bg-surface-container-lowest rounded-2xl p-8 shadow-sm border border-outline-variant/10">
-    <h4 class="text-xl font-bold font-headline text-primary mb-6">Schedule Message</h4>
-    <form id="scheduleForm" class="space-y-6">
-      <div class="space-y-2">
-        <label class="text-[10px] font-bold uppercase tracking-widest text-outline">Recipient Phone</label>
-        <input type="text" id="schPhoneNumber" placeholder="e.g. 15551234567" required autocomplete="off"
-          class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-outline/60"/>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="space-y-2">
-          <label class="text-[10px] font-bold uppercase tracking-widest text-outline">Schedule For</label>
-          <input type="datetime-local" id="schTime" required
-            class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20"/>
+  <!-- ── Schedule Tab ── -->
+  <section id="tab-schedule" class="tab-content hidden">
+    <div class="section-title">
+      <span class="material-symbols-outlined">schedule_send</span>
+      Schedule Message
+    </div>
+    <div class="schedule-info">
+      <span class="material-symbols-outlined">info</span>
+      <p>Schedule messages to be delivered at a specific date and time. The message will be queued and sent automatically when the scheduled time arrives.</p>
+    </div>
+    <form id="scheduleForm">
+      <div class="form-group">
+        <label class="form-label" for="schPhoneNumber">Recipient Phone</label>
+        <div class="input-with-icon">
+          <span class="material-symbols-outlined">call</span>
+          <input type="text" id="schPhoneNumber" class="form-input" placeholder="e.g. 15551234567" required autocomplete="off"/>
         </div>
       </div>
-      <div class="space-y-2">
-        <label class="text-[10px] font-bold uppercase tracking-widest text-outline">Message Content</label>
-        <textarea id="schMessageBody" rows="4" required placeholder="This message will arrive exactly when you want..."
-          class="w-full bg-surface-container-low border-none rounded-xl py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-outline/60 resize-none"></textarea>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="schTime">Schedule For</label>
+          <div class="input-with-icon">
+            <span class="material-symbols-outlined">event</span>
+            <input type="datetime-local" id="schTime" class="form-input" required style="padding-left:48px;"/>
+          </div>
+        </div>
       </div>
-      <button type="submit" id="schBtn" class="flex items-center gap-2 px-8 py-3 bg-primary text-on-primary font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-        <span class="material-symbols-outlined text-sm">schedule_send</span>
+      <div class="form-group">
+        <label class="form-label" for="schMessageBody">Message Content</label>
+        <textarea id="schMessageBody" class="form-textarea" rows="4" required placeholder="This message will arrive exactly when you want..."></textarea>
+      </div>
+      <button type="submit" id="schBtn" class="btn-primary">
+        <span class="material-symbols-outlined">schedule_send</span>
         <span class="btn-text">Queue Message</span>
       </button>
     </form>
-    <div id="schFeedback" class="hidden mt-4 px-4 py-3 rounded-xl text-sm font-medium text-center"></div>
+    <div id="schFeedback" class="feedback"></div>
   </section>
+
 </div>
 </main>
 
-<!-- Mobile Bottom Nav -->
-<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 flex justify-around items-center py-3 z-50">
-  <a class="flex flex-col items-center gap-1 text-slate-400" href="/"><span class="material-symbols-outlined">dashboard</span><span class="text-[10px]">Home</span></a>
-  <a class="flex flex-col items-center gap-1 text-emerald-600" href="/messages"><span class="material-symbols-outlined">history_edu</span><span class="text-[10px] font-bold">Messages</span></a>
-  <a class="flex flex-col items-center gap-1 text-slate-400" href="/connect"><span class="material-symbols-outlined">qr_code_2</span><span class="text-[10px]">Connect</span></a>
-  <a class="flex flex-col items-center gap-1 text-slate-400" href="/chat"><span class="material-symbols-outlined">chat_bubble</span><span class="text-[10px]">Chat</span></a>
+<!-- ── Mobile Bottom Nav ── -->
+<nav class="mobile-nav">
+  <a href="/">
+    <span class="material-symbols-outlined">dashboard</span>
+    <span>Home</span>
+  </a>
+  <a href="/messages" class="active">
+    <span class="material-symbols-outlined">history_edu</span>
+    <span>Messages</span>
+  </a>
+  <a href="/connect">
+    <span class="material-symbols-outlined">qr_code_2</span>
+    <span>Connect</span>
+  </a>
+  <a href="/chat">
+    <span class="material-symbols-outlined">chat_bubble</span>
+    <span>Chat</span>
+  </a>
+  <a href="/api-keys">
+    <span class="material-symbols-outlined">key</span>
+    <span>API Keys</span>
+  </a>
 </nav>
 
 <script src="js/app.js"></script>
 <script>
-// Tab switching logic
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => {
-      b.classList.remove('active', 'bg-primary', 'text-on-primary');
-      b.classList.add('text-on-surface-variant');
+// ── apiFetch wrapper ──
+window.apiFetch = async function(url, options = {}) {
+  const res = await fetch(url, options);
+  if (res.status === 401 || res.status === 403) {
+    window.location.href = '/login';
+    throw new Error('Session expired');
+  }
+  return res;
+};
+
+// ── Tab switching logic ──
+(function() {
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  var tabContents = document.querySelectorAll('.tab-content');
+
+  function activateTab(targetTab) {
+    // Reset all buttons
+    tabBtns.forEach(function(b) {
+      b.classList.remove('active');
+      b.style.backgroundColor = 'transparent';
+      b.style.color = 'var(--text-secondary)';
     });
-    btn.classList.add('active', 'bg-primary', 'text-on-primary');
-    btn.classList.remove('text-on-surface-variant');
+    // Hide all tab content
+    tabContents.forEach(function(c) {
+      c.classList.add('hidden');
+    });
+    // Activate the target button
+    var targetBtn = document.querySelector('.tab-btn[data-tab="' + targetTab + '"]');
+    if (targetBtn) {
+      targetBtn.classList.add('active');
+      targetBtn.style.backgroundColor = 'var(--accent)';
+      targetBtn.style.color = '#ffffff';
+    }
+    // Show the target content
+    var targetContent = document.getElementById('tab-' + targetTab);
+    if (targetContent) {
+      targetContent.classList.remove('hidden');
+    }
+  }
 
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-    document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+  tabBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      activateTab(btn.dataset.tab);
+    });
   });
-});
-// Init active tab styling
-document.querySelector('.tab-btn.active').classList.add('bg-primary', 'text-on-primary');
-document.querySelectorAll('.tab-btn:not(.active)').forEach(b => b.classList.add('text-on-surface-variant'));
 
-// Open compose button
-const openBtn = document.getElementById('openComposeBtn');
-if (openBtn) openBtn.addEventListener('click', () => {
-  document.querySelectorAll('.tab-btn').forEach(b => {
-    b.classList.remove('active', 'bg-primary', 'text-on-primary');
-    b.classList.add('text-on-surface-variant');
+  // Init: set active tab styling
+  var activeBtn = document.querySelector('.tab-btn.active');
+  if (activeBtn) {
+    activeBtn.style.backgroundColor = 'var(--accent)';
+    activeBtn.style.color = '#ffffff';
+  }
+  tabBtns.forEach(function(b) {
+    if (!b.classList.contains('active')) {
+      b.style.backgroundColor = 'transparent';
+      b.style.color = 'var(--text-secondary)';
+    }
   });
-  const singleBtn = document.querySelector('[data-tab="single"]');
-  singleBtn.classList.add('active', 'bg-primary', 'text-on-primary');
-  singleBtn.classList.remove('text-on-surface-variant');
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-  document.getElementById('tab-single').classList.remove('hidden');
-  document.getElementById('phoneNumber').focus();
-});
+
+  // ── Open Compose Button ──
+  var openBtn = document.getElementById('openComposeBtn');
+  if (openBtn) {
+    openBtn.addEventListener('click', function() {
+      activateTab('single');
+      var phoneInput = document.getElementById('phoneNumber');
+      if (phoneInput) phoneInput.focus();
+    });
+  }
+})();
+
+// ── Bulk message counter with limit warning ──
+(function() {
+  var MAX_BULK = 1000;
+  var bulkData = document.getElementById('bulkData');
+  var bulkCount = document.getElementById('bulkCount');
+  var bulkCounterFill = document.getElementById('bulkCounterFill');
+  var bulkCounter = document.getElementById('bulkCounter');
+  var bulkLimitWarning = document.getElementById('bulkLimitWarning');
+  var bulkBtn = document.getElementById('bulkBtn');
+
+  if (!bulkData || !bulkCount) return;
+
+  function updateBulkCounter() {
+    var text = bulkData.value.trim();
+    var count = 0;
+    if (text.length > 0) {
+      var lines = text.split('\n');
+      for (var i = 0; i < lines.length; i++) {
+        if (lines[i].trim().length > 0) count++;
+      }
+    }
+
+    bulkCount.textContent = count.toLocaleString();
+    var pct = Math.min((count / MAX_BULK) * 100, 100);
+    bulkCounterFill.style.width = pct + '%';
+
+    // Reset classes
+    bulkCounter.classList.remove('warning', 'danger');
+    bulkLimitWarning.classList.remove('visible');
+
+    if (count > MAX_BULK) {
+      bulkCounter.classList.add('danger');
+      bulkLimitWarning.classList.add('visible');
+      bulkBtn.disabled = true;
+    } else if (count > MAX_BULK * 0.8) {
+      bulkCounter.classList.add('warning');
+      bulkBtn.disabled = false;
+    } else {
+      bulkBtn.disabled = false;
+    }
+  }
+
+  bulkData.addEventListener('input', updateBulkCounter);
+  updateBulkCounter();
+})();
+
+// ── MutationObserver: re-style feedback elements after app.js showFeedback ──
+(function() {
+  var feedbackIds = ['singleFeedback', 'bulkFeedback', 'schFeedback'];
+  feedbackIds.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+
+    var observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          // When feedback becomes visible (hidden class removed)
+          if (!el.classList.contains('hidden')) {
+            el.style.display = 'block';
+            el.style.borderRadius = '12px';
+            el.style.fontSize = '14px';
+            el.style.fontWeight = '500';
+            el.style.textAlign = 'center';
+            el.style.marginTop = '16px';
+            el.style.padding = '12px 16px';
+            el.style.animation = 'fadeIn 0.3s ease';
+          } else {
+            el.style.display = 'none';
+          }
+        }
+      });
+    });
+
+    observer.observe(el, { attributes: true, attributeFilter: ['class'] });
+  });
+})();
 </script>
 </body></html>

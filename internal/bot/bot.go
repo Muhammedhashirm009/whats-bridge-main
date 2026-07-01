@@ -28,6 +28,37 @@ var CurrentQR string
 var QRMutex sync.Mutex
 var container *sqlstore.Container
 
+// clientMu protects GlobalClient and container from concurrent access.
+var clientMu sync.RWMutex
+
+// GetClient returns the current WhatsApp client in a thread-safe manner.
+func GetClient() *whatsmeow.Client {
+	clientMu.RLock()
+	defer clientMu.RUnlock()
+	return GlobalClient
+}
+
+// SetClient sets the global WhatsApp client in a thread-safe manner.
+func SetClient(c *whatsmeow.Client) {
+	clientMu.Lock()
+	defer clientMu.Unlock()
+	GlobalClient = c
+}
+
+// getContainer returns the current container in a thread-safe manner.
+func getContainer() *sqlstore.Container {
+	clientMu.RLock()
+	defer clientMu.RUnlock()
+	return container
+}
+
+// setContainer sets the container in a thread-safe manner.
+func setContainer(c *sqlstore.Container) {
+	clientMu.Lock()
+	defer clientMu.Unlock()
+	container = c
+}
+
 func EventHandler(evt interface{}) {
 	switch v := evt.(type) {
 	case *events.Message:
@@ -38,7 +69,8 @@ func EventHandler(evt interface{}) {
 func InitWhatsApp() {
 	waPostgresDSN := os.Getenv("WA_POSTGRES_DSN")
 	if waPostgresDSN == "" {
-		log.Fatal("WA_POSTGRES_DSN environment variable is required")
+		log.Printf("WA_POSTGRES_DSN environment variable is required")
+		return
 	}
 
 	dbLog := waLog.Stdout("Database", "WARN", true)
@@ -46,8 +78,10 @@ func InitWhatsApp() {
 
 	// Retry database initialization until it succeeds
 	for {
-		container, err = sqlstore.New(context.Background(), "postgres", waPostgresDSN, dbLog)
+		var c *sqlstore.Container
+		c, err = sqlstore.New(context.Background(), "postgres", waPostgresDSN, dbLog)
 		if err == nil {
+			setContainer(c)
 			break
 		}
 		log.Printf("Failed to open WhatsApp store DB, retrying in 5s: %v", err)
@@ -59,7 +93,13 @@ func InitWhatsApp() {
 }
 
 func StartClient() {
-	deviceStore, err := container.GetFirstDevice(context.Background())
+	c := getContainer()
+	if c == nil {
+		log.Printf("Cannot start client: container is nil")
+		return
+	}
+
+	deviceStore, err := c.GetFirstDevice(context.Background())
 	if err != nil {
 		log.Printf("Failed to get device store: %v", err)
 		return
@@ -70,15 +110,25 @@ func StartClient() {
 	client.AddEventHandler(EventHandler)
 
 	if client.Store.ID == nil {
-		qrChan, _ := client.GetQRChannel(context.Background())
+		qrChan, err := client.GetQRChannel(context.Background())
+		if err != nil {
+			log.Printf("Failed to get QR channel: %v", err)
+			SetClient(client)
+			return
+		}
 		err = client.Connect()
 		if err != nil {
 			log.Printf("WhatsApp connect failed (no internet?), will retry in background: %v", err)
-			GlobalClient = client
+			SetClient(client)
 			go retryConnect(client)
 			return
 		}
 		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf("Recovered from panic in QR channel goroutine: %v", r)
+				}
+			}()
 			for evt := range qrChan {
 				if evt.Event == "code" {
 					QRMutex.Lock()
@@ -100,19 +150,24 @@ func StartClient() {
 		err = client.Connect()
 		if err != nil {
 			log.Printf("WhatsApp connect failed (no internet?), will retry in background: %v", err)
-			GlobalClient = client
+			SetClient(client)
 			go retryConnect(client)
 			return
 		}
 		fmt.Println("Successfully connected to WhatsApp!")
 	}
 
-	GlobalClient = client
+	SetClient(client)
 }
 
 // retryConnect keeps trying to connect to WhatsApp servers until successful.
 // This handles the case where the app starts before internet is available.
 func retryConnect(client *whatsmeow.Client) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered from panic in retryConnect goroutine: %v", r)
+		}
+	}()
 	for {
 		time.Sleep(15 * time.Second)
 
@@ -134,18 +189,20 @@ func retryConnect(client *whatsmeow.Client) {
 }
 
 func RestartBot() {
-	if GlobalClient != nil {
-		GlobalClient.Disconnect()
+	c := GetClient()
+	if c != nil {
+		c.Disconnect()
 	}
 	StartClient()
 }
 
 func Logout() error {
-	if GlobalClient == nil {
+	c := GetClient()
+	if c == nil {
 		return fmt.Errorf("client not initialized")
 	}
 
-	err := GlobalClient.Logout(context.Background())
+	err := c.Logout(context.Background())
 	if err != nil {
 		return err
 	}
@@ -162,13 +219,14 @@ func SendTextMessage(to string, message string) error {
 	if !IsInternetAvailable() {
 		return fmt.Errorf("no internet connection")
 	}
-	if GlobalClient == nil {
+	c := GetClient()
+	if c == nil {
 		return fmt.Errorf("client not connected")
 	}
 
 	phone := strings.ReplaceAll(strings.ReplaceAll(to, "+", ""), " ", "")
 	jid := types.NewJID(phone, types.DefaultUserServer)
-	_, err := GlobalClient.SendMessage(context.Background(), jid, &waProto.Message{
+	_, err := c.SendMessage(context.Background(), jid, &waProto.Message{
 		Conversation: proto.String(message),
 	})
 	db.LogMessageUsage(err == nil)
@@ -179,7 +237,8 @@ func SendMediaMessage(to string, filePath string, caption string) error {
 	if !IsInternetAvailable() {
 		return fmt.Errorf("no internet connection")
 	}
-	if GlobalClient == nil {
+	c := GetClient()
+	if c == nil {
 		return fmt.Errorf("client not connected")
 	}
 
@@ -200,7 +259,7 @@ func SendMediaMessage(to string, filePath string, caption string) error {
 		mediaType = whatsmeow.MediaDocument
 	}
 
-	uploadResp, err := GlobalClient.Upload(context.Background(), data, mediaType)
+	uploadResp, err := c.Upload(context.Background(), data, mediaType)
 	if err != nil {
 		return fmt.Errorf("failed to upload media: %v", err)
 	}
@@ -263,7 +322,7 @@ func SendMediaMessage(to string, filePath string, caption string) error {
 
 	phone := strings.ReplaceAll(strings.ReplaceAll(to, "+", ""), " ", "")
 	jid := types.NewJID(phone, types.DefaultUserServer)
-	_, err = GlobalClient.SendMessage(context.Background(), jid, msg)
+	_, err = c.SendMessage(context.Background(), jid, msg)
 	db.LogMessageUsage(err == nil)
 	return err
 }

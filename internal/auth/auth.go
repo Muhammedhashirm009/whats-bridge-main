@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -56,32 +57,53 @@ func seedUsers() {
 		return
 	}
 
+	// Read admin credentials from environment variables
+	adminUser := os.Getenv("ADMIN_USER")
+	if adminUser == "" {
+		adminUser = "admin"
+	}
+
+	adminPass := os.Getenv("ADMIN_PASS")
+	if adminPass == "" {
+		// Generate a random 16-character password
+		b := make([]byte, 8)
+		if _, err := rand.Read(b); err != nil {
+			log.Printf("Auth: failed to generate random password: %v", err)
+			return
+		}
+		adminPass = hex.EncodeToString(b)
+		log.Printf("⚠️ Generated admin password: %s — set ADMIN_PASS env var to change", adminPass)
+	}
+
 	// Check if default user exists
 	var count int
-	err = db.LocalDB.QueryRow("SELECT COUNT(*) FROM users WHERE username = ?", "hashir").Scan(&count)
+	err = db.LocalDB.QueryRow("SELECT COUNT(*) FROM users WHERE username = ?", adminUser).Scan(&count)
 	if err != nil {
 		log.Printf("Auth: failed to check default user: %v", err)
 		return
 	}
 
 	if count == 0 {
-		hash, err := bcrypt.GenerateFromPassword([]byte("Ashir9990*"), bcrypt.DefaultCost)
+		hash, err := bcrypt.GenerateFromPassword([]byte(adminPass), bcrypt.DefaultCost)
 		if err != nil {
 			log.Printf("Auth: failed to hash password: %v", err)
 			return
 		}
-		_, err = db.LocalDB.Exec("INSERT INTO users (username, password_hash) VALUES (?, ?)", "hashir", string(hash))
+		_, err = db.LocalDB.Exec("INSERT INTO users (username, password_hash) VALUES (?, ?)", adminUser, string(hash))
 		if err != nil {
 			log.Printf("Auth: failed to seed default user: %v", err)
 			return
 		}
-		log.Println("Auth: default user 'hashir' created successfully.")
+		log.Printf("Auth: default user '%s' created successfully.", adminUser)
 	}
 }
 
 func generateToken() string {
 	b := make([]byte, 32)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		log.Printf("Auth: failed to generate secure token: %v", err)
+		return ""
+	}
 	return hex.EncodeToString(b)
 }
 
@@ -134,6 +156,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create session
 	token := generateToken()
+	if token == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "Failed to create session"})
+		return
+	}
 	sessionsMu.Lock()
 	sessions[token] = session{
 		Username:  req.Username,
@@ -141,13 +169,21 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	sessionsMu.Unlock()
 
+	// Determine cookie security based on environment
+	isProduction := os.Getenv("APP_ENV") == "production"
+	sameSite := http.SameSiteLaxMode
+	if isProduction {
+		sameSite = http.SameSiteStrictMode
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "wb_session",
 		Value:    token,
 		Path:     "/",
 		MaxAge:   30 * 24 * 60 * 60,
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
+		Secure:   isProduction,
+		SameSite: sameSite,
 	})
 
 	w.Header().Set("Content-Type", "application/json")

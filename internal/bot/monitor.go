@@ -3,11 +3,16 @@ package bot
 import (
 	"log"
 	"net"
+	"sync"
 	"sync/atomic"
 	"time"
 )
 
 var internetAvailable atomic.Bool
+
+// restartMu and lastRestart implement a 30-second debounce for RestartBot calls.
+var restartMu sync.Mutex
+var lastRestart time.Time
 
 func init() {
 	internetAvailable.Store(true)
@@ -20,6 +25,11 @@ func IsInternetAvailable() bool {
 
 func StartInternetMonitor() {
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recovered from panic in internet monitor goroutine: %v", r)
+			}
+		}()
 		for {
 			isOnline := checkInternet()
 			wasOnline := internetAvailable.Swap(isOnline)
@@ -28,7 +38,22 @@ func StartInternetMonitor() {
 				if isOnline {
 					log.Println("Internet connection restored. Triggering reconnection...")
 					go func() {
-						if GlobalClient != nil && !GlobalClient.IsConnected() {
+						defer func() {
+							if r := recover(); r != nil {
+								log.Printf("Recovered from panic in reconnection goroutine: %v", r)
+							}
+						}()
+						c := GetClient()
+						if c != nil && !c.IsConnected() {
+							// Debounce: only restart if at least 30 seconds since last restart
+							restartMu.Lock()
+							if time.Since(lastRestart) < 30*time.Second {
+								restartMu.Unlock()
+								log.Println("RestartBot debounced: called too recently, skipping")
+								return
+							}
+							lastRestart = time.Now()
+							restartMu.Unlock()
 							RestartBot()
 						}
 					}()

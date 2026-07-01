@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"whatsbridge/internal/api"
 	"whatsbridge/internal/auth"
@@ -26,10 +27,24 @@ func main() {
 	auth.InitUsers()
 
 	// ---- WhatsApp Bot (uses PostgreSQL for session store) ----
-	go bot.InitWhatsApp()
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("PANIC in InitWhatsApp: %v", r)
+			}
+		}()
+		bot.InitWhatsApp()
+	}()
 
 	// ---- Background services ----
-	go bot.StartSchedulerLoop()
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("PANIC in StartSchedulerLoop: %v", r)
+			}
+		}()
+		bot.StartSchedulerLoop()
+	}()
 	bot.StartInternetMonitor()
 
 	// ---- HTTP Server ----
@@ -56,7 +71,7 @@ func main() {
 	mux.HandleFunc("/api/keys/create", auth.RequireAuthAPI(api.APIKeysCreateHandler))
 	mux.HandleFunc("/api/keys/delete", auth.RequireAuthAPI(api.APIKeysDeleteHandler))
 
-	// WebSocket bridge — NO auth (Laravel WSS)
+	// WebSocket bridge — Protected by API Key
 	mux.HandleFunc("/ws/bridge", bot.HandleBridgeWebSocket)
 
 	// Login page (no auth)
@@ -101,5 +116,13 @@ func main() {
 	}
 
 	fmt.Printf("WhatsBridge dashboard running on http://localhost:%s\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, mux))
+
+	srv := &http.Server{
+		Addr:         ":" + port,
+		Handler:      mux,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 60 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+	log.Fatal(srv.ListenAndServe())
 }

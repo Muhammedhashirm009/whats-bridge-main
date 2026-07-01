@@ -1,4 +1,26 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // ---- apiFetch wrapper (checks 401/403) ----
+    async function apiFetch(url, options = {}) {
+        const res = await fetch(url, options);
+        if (res.status === 401 || res.status === 403) {
+            window.location.href = '/login';
+            throw new Error('Session expired');
+        }
+        return res;
+    }
+
+    // ---- Interval Tracking & Cleanup ----
+    const _intervalIds = [];
+    function trackedSetInterval(fn, ms) {
+        const id = setInterval(fn, ms);
+        _intervalIds.push(id);
+        return id;
+    }
+
+    window.addEventListener('beforeunload', () => {
+        _intervalIds.forEach(id => clearInterval(id));
+    });
+
     // ---- Global Elements ----
     const statusDot = document.getElementById('status-dot');
     const statusText = document.getElementById('status-text');
@@ -9,6 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const metricSent = document.getElementById('metric-sent');
     const metricScheduled = document.getElementById('metric-scheduled');
     const metricFailed = document.getElementById('metric-failed');
+
+    // Dashboard connection card
+    const connIndicator = document.getElementById('conn-indicator');
+    const connTitle = document.getElementById('conn-title');
+    const connDesc = document.getElementById('conn-desc');
+    const connBadge = document.getElementById('conn-badge');
 
     // Single Send
     const sendMessageForm = document.getElementById('sendMessageForm');
@@ -47,42 +75,60 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---- Status & Metrics Polling ----
     async function checkStatus() {
         try {
-            const res = await fetch('/api/status');
+            const res = await apiFetch('/api/status');
             const data = await res.json();
             
             isConnected = data.connected;
             isLoggedIn = data.loggedIn;
             
             if (statusDot && statusText) {
-                // Reset classes
-                statusDot.className = 'w-2.5 h-2.5 rounded-full';
+                // Reset classes for sidebar status dot
+                statusDot.className = 'status-dot';
                 
                 if (isConnected && isLoggedIn) {
-                    statusDot.classList.add('bg-emerald-500');
-                    statusDot.classList.remove('animate-pulse');
+                    statusDot.classList.add('connected');
                     statusText.textContent = 'Connected';
-                    statusText.className = 'text-xs font-semibold text-emerald-700';
                 } else if (isConnected && !isLoggedIn) {
-                    statusDot.classList.add('bg-yellow-400', 'animate-pulse');
+                    statusDot.classList.add('awaiting', 'pulsing');
                     statusText.textContent = 'Awaiting Scan';
-                    statusText.className = 'text-xs font-semibold text-yellow-700';
                 } else if (!isConnected && isLoggedIn) {
-                    statusDot.classList.add('bg-yellow-400', 'animate-pulse');
+                    statusDot.classList.add('disconnected', 'pulsing');
                     statusText.textContent = 'Disconnected';
-                    statusText.className = 'text-xs font-semibold text-yellow-700';
                 } else {
-                    statusDot.classList.add('bg-red-500', 'animate-pulse');
+                    statusDot.classList.add('offline', 'pulsing');
                     statusText.textContent = 'Logged Out';
-                    statusText.className = 'text-xs font-semibold text-red-600';
+                }
+            }
+
+            // Update dashboard connection card
+            if (connIndicator && connBadge) {
+                if (isConnected && isLoggedIn) {
+                    connIndicator.className = 'conn-indicator online';
+                    connTitle.textContent = 'WhatsApp Connected';
+                    connDesc.textContent = 'Your bot is online and ready to send messages.';
+                    connBadge.className = 'conn-badge online';
+                    connBadge.textContent = 'Online';
+                } else {
+                    connIndicator.className = 'conn-indicator offline';
+                    connTitle.textContent = 'WhatsApp Disconnected';
+                    connDesc.textContent = 'Connect your WhatsApp to start sending messages.';
+                    connBadge.className = 'conn-badge offline';
+                    connBadge.textContent = 'Offline';
                 }
             }
 
             updateConnectionView();
         } catch (error) {
             if (statusDot && statusText) {
-                statusDot.className = 'w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse';
+                statusDot.className = 'status-dot offline pulsing';
                 statusText.textContent = 'Offline';
-                statusText.className = 'text-xs font-semibold text-red-600';
+            }
+            if (connIndicator && connBadge) {
+                connIndicator.className = 'conn-indicator offline';
+                connTitle.textContent = 'Connection Error';
+                connDesc.textContent = 'Unable to reach the server.';
+                connBadge.className = 'conn-badge offline';
+                connBadge.textContent = 'Error';
             }
             isConnected = false;
             isLoggedIn = false;
@@ -114,12 +160,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!loggedOutView || loggedOutView.classList.contains('hidden')) return;
 
         try {
-            const res = await fetch('/api/qr');
+            const res = await apiFetch('/api/qr');
             const data = await res.json();
 
             if (data.code) {
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(data.code)}`;
-                qrImage.src = qrUrl;
+                // Client-side QR generation using qrcode.js
+                QRCode.toDataURL(data.code).then(url => {
+                    qrImage.src = url;
+                });
                 qrDisplay.classList.remove('hidden');
                 qrLoading.classList.add('hidden');
                 qrError.classList.add('hidden');
@@ -139,12 +187,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function startQRPoll() {
         if (qrPollInterval) return;
         fetchQR();
-        qrPollInterval = setInterval(fetchQR, 5000);
+        qrPollInterval = trackedSetInterval(fetchQR, 5000);
     }
 
     function stopQRPoll() {
         if (qrPollInterval) {
             clearInterval(qrPollInterval);
+            // Remove from tracked list
+            const idx = _intervalIds.indexOf(qrPollInterval);
+            if (idx > -1) _intervalIds.splice(idx, 1);
             qrPollInterval = null;
         }
     }
@@ -153,11 +204,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!metricSent) return;
         
         try {
-            const res = await fetch('/api/metrics');
+            const res = await apiFetch('/api/metrics');
             const data = await res.json();
             metricSent.textContent = data.total_sent || '0';
+            metricSent.classList.add('loaded');
             metricFailed.textContent = data.total_failed || '0';
+            metricFailed.classList.add('loaded');
             metricScheduled.textContent = data.scheduled_count || '0';
+            metricScheduled.classList.add('loaded');
         } catch(e) {
             console.error('Failed to fetch metrics', e);
         }
@@ -166,8 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial check and regular polling
     checkStatus();
     fetchMetrics();
-    setInterval(checkStatus, 3000);
-    setInterval(fetchMetrics, 5000);
+    trackedSetInterval(checkStatus, 3000);
+    trackedSetInterval(fetchMetrics, 5000);
 
     // ---- Helper ----
     function showFeedback(element, message, type) {
@@ -175,11 +229,26 @@ document.addEventListener('DOMContentLoaded', () => {
         element.textContent = message;
         element.classList.remove('hidden');
         
-        // Tailwind-based feedback styling
         if (type === 'success') {
-            element.className = 'mt-4 px-4 py-3 rounded-xl text-sm font-medium text-center bg-secondary-container/30 text-on-secondary-container border border-secondary/20';
+            element.style.background = 'rgba(37, 211, 102, 0.1)';
+            element.style.color = '#25d366';
+            element.style.border = '1px solid rgba(37, 211, 102, 0.2)';
+            element.style.padding = '12px 16px';
+            element.style.borderRadius = '12px';
+            element.style.fontSize = '14px';
+            element.style.fontWeight = '500';
+            element.style.textAlign = 'center';
+            element.style.marginTop = '16px';
         } else {
-            element.className = 'mt-4 px-4 py-3 rounded-xl text-sm font-medium text-center bg-error-container text-on-error-container border border-error/20';
+            element.style.background = 'rgba(239, 68, 68, 0.1)';
+            element.style.color = '#ef4444';
+            element.style.border = '1px solid rgba(239, 68, 68, 0.2)';
+            element.style.padding = '12px 16px';
+            element.style.borderRadius = '12px';
+            element.style.fontSize = '14px';
+            element.style.fontWeight = '500';
+            element.style.textAlign = 'center';
+            element.style.marginTop = '16px';
         }
         
         setTimeout(() => {
@@ -191,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (disconnectBtn) {
         disconnectBtn.addEventListener('click', async () => {
             try {
-                const res = await fetch('/api/disconnect', { method: 'POST' });
+                const res = await apiFetch('/api/disconnect', { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
                     showFeedback(connFeedback, 'Disconnected successfully', 'success');
@@ -208,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (connectBtn) {
         connectBtn.addEventListener('click', async () => {
             try {
-                const res = await fetch('/api/connect', { method: 'POST' });
+                const res = await apiFetch('/api/connect', { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
                     showFeedback(connFeedback, 'Connecting...', 'success');
@@ -226,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn.addEventListener('click', async () => {
             if (!confirm('Are you sure you want to logout? This will wipe your session data.')) return;
             try {
-                const res = await fetch('/api/logout', { method: 'POST' });
+                const res = await apiFetch('/api/logout', { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
                     showFeedback(connFeedback, 'Logged out. Redirecting to scan...', 'success');
@@ -276,9 +345,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append('to', to);
                     formData.append('message', message);
                     formData.append('file', file);
-                    res = await fetch('/api/send', { method: 'POST', body: formData });
+                    res = await apiFetch('/api/send', { method: 'POST', body: formData });
                 } else {
-                    res = await fetch('/api/send', {
+                    res = await apiFetch('/api/send', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ to, message })
@@ -341,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
             bulkBtn.querySelector('.btn-text').textContent = 'Dispatching...';
 
             try {
-                const res = await fetch('/api/bulk-send', {
+                const res = await apiFetch('/api/bulk-send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ messages, interval_ms: delay })
@@ -385,7 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
             schBtn.querySelector('.btn-text').textContent = 'Scheduling...';
 
             try {
-                const res = await fetch('/api/schedule', {
+                const res = await apiFetch('/api/schedule', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ to, message, scheduled_for: isoTime })

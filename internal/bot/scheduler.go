@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"fmt"
+	"log"
 	"whatsbridge/internal/db"
 	"strings"
 	"time"
@@ -13,10 +14,21 @@ import (
 )
 
 func StartSchedulerLoop() {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered from panic in scheduler loop: %v", r)
+		}
+	}()
 	for {
 		time.Sleep(10 * time.Second)
 
-		if GlobalClient == nil || !GlobalClient.IsConnected() || !GlobalClient.IsLoggedIn() {
+		c := GetClient()
+		if c == nil || !c.IsConnected() || !c.IsLoggedIn() {
+			continue
+		}
+
+		// Check that the database is available before querying
+		if db.GetDB() == nil {
 			continue
 		}
 
@@ -35,7 +47,7 @@ func StartSchedulerLoop() {
 			msg := &waProto.Message{Conversation: proto.String(pending.Message)}
 
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			_, err := GlobalClient.SendMessage(ctx, jid, msg)
+			_, err := c.SendMessage(ctx, jid, msg)
 			cancel()
 
 			if err != nil {

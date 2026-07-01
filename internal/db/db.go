@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -14,17 +15,35 @@ import (
 
 var LocalDB *sql.DB
 
+// dbMu protects LocalDB from concurrent access.
+var dbMu sync.RWMutex
+
+// GetDB returns the current database connection in a thread-safe manner.
+func GetDB() *sql.DB {
+	dbMu.RLock()
+	defer dbMu.RUnlock()
+	return LocalDB
+}
+
+// SetDB sets the global database connection in a thread-safe manner.
+func SetDB(d *sql.DB) {
+	dbMu.Lock()
+	defer dbMu.Unlock()
+	LocalDB = d
+}
+
 func InitDB(dsn string) {
 	var err error
-	LocalDB, err = sql.Open("mysql", dsn)
+	d, err := sql.Open("mysql", dsn)
 	if err != nil {
 		log.Printf("Failed to open MySQL: %v — will retry", err)
 		go retryDB(dsn)
 		return
 	}
+	SetDB(d)
 
 	// Test connection with retry
-	if err = LocalDB.Ping(); err != nil {
+	if err = d.Ping(); err != nil {
 		log.Printf("Failed to connect to MySQL: %v — will retry in background", err)
 		go retryDB(dsn)
 		return
@@ -37,16 +56,16 @@ func InitDB(dsn string) {
 func retryDB(dsn string) {
 	for {
 		time.Sleep(5 * time.Second)
-		var err error
-		LocalDB, err = sql.Open("mysql", dsn)
+		d, err := sql.Open("mysql", dsn)
 		if err != nil {
 			log.Printf("MySQL retry: open failed: %v", err)
 			continue
 		}
-		if err = LocalDB.Ping(); err != nil {
+		if err = d.Ping(); err != nil {
 			log.Printf("MySQL retry: ping failed: %v", err)
 			continue
 		}
+		SetDB(d)
 		createTables()
 		log.Println("MySQL database initialized successfully (on retry).")
 		return
@@ -54,6 +73,12 @@ func retryDB(dsn string) {
 }
 
 func createTables() {
+	d := GetDB()
+	if d == nil {
+		log.Printf("createTables: database not initialized, skipping")
+		return
+	}
+
 	queries := []string{
 		`CREATE TABLE IF NOT EXISTS usage_logs (
 			id INT AUTO_INCREMENT PRIMARY KEY,
@@ -80,7 +105,7 @@ func createTables() {
 	}
 
 	for _, query := range queries {
-		_, err := LocalDB.Exec(query)
+		_, err := d.Exec(query)
 		if err != nil {
 			fmt.Printf("Error creating table: %v\n", err)
 		}
@@ -88,19 +113,20 @@ func createTables() {
 }
 
 func LogMessageUsage(success bool) {
-	if LocalDB == nil {
+	d := GetDB()
+	if d == nil {
 		return
 	}
 
 	today := time.Now().Format("2006-01-02")
 
 	// Ensure row exists for today
-	_, _ = LocalDB.Exec(`INSERT IGNORE INTO usage_logs (date) VALUES (?)`, today)
+	_, _ = d.Exec(`INSERT IGNORE INTO usage_logs (date) VALUES (?)`, today)
 
 	if success {
-		_, _ = LocalDB.Exec(`UPDATE usage_logs SET messages_sent = messages_sent + 1 WHERE date = ?`, today)
+		_, _ = d.Exec(`UPDATE usage_logs SET messages_sent = messages_sent + 1 WHERE date = ?`, today)
 	} else {
-		_, _ = LocalDB.Exec(`UPDATE usage_logs SET messages_failed = messages_failed + 1 WHERE date = ?`, today)
+		_, _ = d.Exec(`UPDATE usage_logs SET messages_failed = messages_failed + 1 WHERE date = ?`, today)
 	}
 }
 
@@ -112,18 +138,30 @@ type Metrics struct {
 
 func GetMetrics() (Metrics, error) {
 	var m Metrics
-	err := LocalDB.QueryRow(`SELECT IFNULL(SUM(messages_sent),0), IFNULL(SUM(messages_failed),0) FROM usage_logs`).Scan(&m.TotalSent, &m.TotalFailed)
-	if err != nil {
-		m.TotalSent = 0
-		m.TotalFailed = 0
+	d := GetDB()
+	if d == nil {
+		return m, fmt.Errorf("database not initialized")
 	}
 
-	LocalDB.QueryRow(`SELECT COUNT(*) FROM scheduled_messages WHERE status = 'pending'`).Scan(&m.ScheduledCount)
+	err := d.QueryRow(`SELECT IFNULL(SUM(messages_sent),0), IFNULL(SUM(messages_failed),0) FROM usage_logs`).Scan(&m.TotalSent, &m.TotalFailed)
+	if err != nil {
+		return m, fmt.Errorf("failed to query usage metrics: %w", err)
+	}
+
+	err = d.QueryRow(`SELECT COUNT(*) FROM scheduled_messages WHERE status = 'pending'`).Scan(&m.ScheduledCount)
+	if err != nil {
+		return m, fmt.Errorf("failed to query scheduled count: %w", err)
+	}
+
 	return m, nil
 }
 
 func AddScheduledMessage(recipient, message, scheduledFor string) error {
-	_, err := LocalDB.Exec(`INSERT INTO scheduled_messages (recipient, message, scheduled_for) VALUES (?, ?, ?)`,
+	d := GetDB()
+	if d == nil {
+		return fmt.Errorf("database not initialized")
+	}
+	_, err := d.Exec(`INSERT INTO scheduled_messages (recipient, message, scheduled_for) VALUES (?, ?, ?)`,
 		recipient, message, scheduledFor)
 	return err
 }
@@ -135,7 +173,11 @@ type ScheduledMessage struct {
 }
 
 func GetPendingMessages(now string) ([]ScheduledMessage, error) {
-	rows, err := LocalDB.Query(`SELECT id, recipient, message FROM scheduled_messages WHERE status = 'pending' AND scheduled_for <= ?`, now)
+	d := GetDB()
+	if d == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+	rows, err := d.Query(`SELECT id, recipient, message FROM scheduled_messages WHERE status = 'pending' AND scheduled_for <= ?`, now)
 	if err != nil {
 		return nil, err
 	}
@@ -148,11 +190,18 @@ func GetPendingMessages(now string) ([]ScheduledMessage, error) {
 			msgs = append(msgs, m)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return msgs, fmt.Errorf("error iterating pending messages: %w", err)
+	}
 	return msgs, nil
 }
 
 func UpdateScheduledMessageStatus(id int, status string) error {
-	_, err := LocalDB.Exec(`UPDATE scheduled_messages SET status = ? WHERE id = ?`, status, id)
+	d := GetDB()
+	if d == nil {
+		return fmt.Errorf("database not initialized")
+	}
+	_, err := d.Exec(`UPDATE scheduled_messages SET status = ? WHERE id = ?`, status, id)
 	return err
 }
 
@@ -174,16 +223,25 @@ func hashKey(key string) string {
 
 // CreateAPIKey generates a new API key, stores its hash, and returns the raw key.
 func CreateAPIKey(name string) (string, error) {
+	d := GetDB()
+	if d == nil {
+		return "", fmt.Errorf("database not initialized")
+	}
+
 	// Generate 32-byte random key
 	b := make([]byte, 32)
-	if _, err := rand.Read(b); err != nil {
+	n, err := rand.Read(b)
+	if err != nil {
 		return "", fmt.Errorf("failed to generate random key: %w", err)
+	}
+	if n != 32 {
+		return "", fmt.Errorf("failed to generate random key: expected 32 bytes, got %d", n)
 	}
 	rawKey := "wb_" + hex.EncodeToString(b) // wb_ prefix for easy identification
 	keyHash := hashKey(rawKey)
 	keyPrefix := rawKey[:11] // "wb_" + first 8 hex chars
 
-	_, err := LocalDB.Exec(
+	_, err = d.Exec(
 		`INSERT INTO api_keys (name, key_hash, key_prefix) VALUES (?, ?, ?)`,
 		name, keyHash, keyPrefix,
 	)
@@ -197,7 +255,11 @@ func CreateAPIKey(name string) (string, error) {
 
 // ListAPIKeys returns all API keys (without the actual key, just metadata).
 func ListAPIKeys() ([]APIKey, error) {
-	rows, err := LocalDB.Query(`SELECT id, name, key_prefix, created_at, last_used_at, is_active FROM api_keys ORDER BY created_at DESC`)
+	d := GetDB()
+	if d == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+	rows, err := d.Query(`SELECT id, name, key_prefix, created_at, last_used_at, is_active FROM api_keys ORDER BY created_at DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -217,12 +279,19 @@ func ListAPIKeys() ([]APIKey, error) {
 		}
 		keys = append(keys, k)
 	}
+	if err := rows.Err(); err != nil {
+		return keys, fmt.Errorf("error iterating API keys: %w", err)
+	}
 	return keys, nil
 }
 
 // DeleteAPIKey removes an API key by ID.
 func DeleteAPIKey(id int) error {
-	result, err := LocalDB.Exec(`DELETE FROM api_keys WHERE id = ?`, id)
+	d := GetDB()
+	if d == nil {
+		return fmt.Errorf("database not initialized")
+	}
+	result, err := d.Exec(`DELETE FROM api_keys WHERE id = ?`, id)
 	if err != nil {
 		return err
 	}
@@ -236,13 +305,14 @@ func DeleteAPIKey(id int) error {
 
 // ValidateAPIKey checks if a raw API key is valid and active.
 func ValidateAPIKey(rawKey string) bool {
-	if LocalDB == nil || rawKey == "" {
+	d := GetDB()
+	if d == nil || rawKey == "" {
 		return false
 	}
 
 	keyHash := hashKey(rawKey)
 	var isActive bool
-	err := LocalDB.QueryRow(`SELECT is_active FROM api_keys WHERE key_hash = ?`, keyHash).Scan(&isActive)
+	err := d.QueryRow(`SELECT is_active FROM api_keys WHERE key_hash = ?`, keyHash).Scan(&isActive)
 	if err != nil {
 		return false
 	}
@@ -250,7 +320,10 @@ func ValidateAPIKey(rawKey string) bool {
 	if isActive {
 		// Update last_used_at
 		go func() {
-			LocalDB.Exec(`UPDATE api_keys SET last_used_at = NOW() WHERE key_hash = ?`, keyHash)
+			dd := GetDB()
+			if dd != nil {
+				dd.Exec(`UPDATE api_keys SET last_used_at = NOW() WHERE key_hash = ?`, keyHash)
+			}
 		}()
 	}
 
@@ -259,11 +332,12 @@ func ValidateAPIKey(rawKey string) bool {
 
 // HasAnyAPIKeys checks if there are any API keys configured.
 func HasAnyAPIKeys() bool {
-	if LocalDB == nil {
+	d := GetDB()
+	if d == nil {
 		return false
 	}
 	var count int
-	err := LocalDB.QueryRow(`SELECT COUNT(*) FROM api_keys WHERE is_active = 1`).Scan(&count)
+	err := d.QueryRow(`SELECT COUNT(*) FROM api_keys WHERE is_active = 1`).Scan(&count)
 	if err != nil {
 		return false
 	}

@@ -1,193 +1,1109 @@
 <!DOCTYPE html>
-<html class="light" lang="en"><head>
+<html lang="en">
+<head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Connect Device | WhatsBridge</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@700;800&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-  tailwind.config = {
-    darkMode: "class",
-    theme: {
-      extend: {
-        colors: {
-          "surface-container-lowest": "#ffffff", "surface": "#f7f9fc", "primary": "#00453d",
-          "on-primary": "#ffffff", "on-error-container": "#93000a", "background": "#f7f9fc",
-          "outline": "#6f7976", "primary-fixed": "#a8f0e3", "primary-container": "#075e54",
-          "surface-container-high": "#e6e8eb", "on-surface": "#191c1e", "error": "#ba1a1a",
-          "surface-container-highest": "#e0e3e6", "surface-container-low": "#f2f4f7",
-          "secondary-container": "#5dfd8a", "surface-variant": "#e0e3e6",
-          "error-container": "#ffdad6", "surface-container": "#eceef1",
-          "on-surface-variant": "#3f4946", "outline-variant": "#bec9c5",
-          "on-primary-container": "#8dd5c8", "secondary": "#006d2f",
-          "on-secondary-container": "#007232", "on-primary-fixed": "#00201c"
-        },
-        fontFamily: { "headline": ["Manrope"], "body": ["Inter"], "label": ["Inter"] },
-        borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
-      },
-    },
-  }
-</script>
+<meta name="description" content="Connect your WhatsApp device to WhatsBridge — scan the QR code to link your account securely." />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <style>
-  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-  .glass-panel { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
+/* ── CSS Variables ── */
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-card: #12121a;
+  --bg-input: #1a1a2e;
+  --accent: #10b981;
+  --accent-hover: #059669;
+  --accent-dim: rgba(16, 185, 129, 0.12);
+  --accent-glow: rgba(16, 185, 129, 0.25);
+  --secondary: #6366f1;
+  --secondary-dim: rgba(99, 102, 241, 0.12);
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.12);
+
+  --accent-red: #ef4444;
+  --accent-red-dim: rgba(239, 68, 68, 0.12);
+  --accent-amber: #f59e0b;
+  --accent-amber-dim: rgba(245, 158, 11, 0.12);
+
+  --glass-bg: rgba(18, 18, 26, 0.55);
+  --glass-blur: 20px;
+
+  --sidebar-width: 260px;
+  --topbar-height: 64px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --shadow-glow-green: 0 0 40px rgba(16, 185, 129, 0.08);
+
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Material Icons ── */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+}
+
+/* ── Layout ── */
+.app-layout { display: flex; min-height: 100vh; }
+
+/* ── Sidebar ── */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  background: #0e0e16;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+  z-index: 100;
+  transition: transform var(--transition-smooth);
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px;
+  margin-bottom: 32px;
+}
+
+.sidebar-brand-icon {
+  width: 42px; height: 42px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+.sidebar-brand-text h1 {
+  font-size: 18px; font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.sidebar-brand-text p {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Status indicator in sidebar */
+.sidebar-status {
+  margin: 0 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.status-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--accent-amber);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.status-dot.connected {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+.status-dot.disconnected { background: var(--accent-red); }
+.status-dot.awaiting { background: var(--accent-amber); }
+.status-dot.offline { background: var(--accent-red); }
+
+.status-dot.pulsing::after {
+  content: '';
+  position: absolute;
+  top: -3px; left: -3px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.4;
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.status-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Sidebar nav */
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 10px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+  background: var(--bg-input);
+}
+
+.nav-link.active {
+  color: var(--accent);
+  background: var(--accent-dim);
+  font-weight: 600;
+}
+
+.nav-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 24px;
+  border-radius: 0 4px 4px 0;
+  background: var(--accent);
+}
+
+.nav-link .material-symbols-outlined { font-size: 22px; }
+
+/* Sidebar footer */
+.sidebar-footer {
+  padding: 16px;
+  margin-top: auto;
+}
+
+.sidebar-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
+}
+
+.sidebar-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(16, 185, 129, 0.35);
+}
+.sidebar-cta:active { transform: translateY(0); }
+.sidebar-cta .material-symbols-outlined { font-size: 18px; }
+
+/* ── Main Content ── */
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+}
+
+.content-wrapper {
+  padding: 40px 48px;
+  max-width: 1200px;
+}
+
+/* ── Header ── */
+.page-header { margin-bottom: 40px; }
+
+.page-header h2 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.page-header p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+/* ── Glass Card ── */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: all var(--transition-smooth);
+}
+
+.glass-card:hover {
+  border-color: var(--border-medium);
+}
+
+/* ── Main Grid ── */
+.connect-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* ── QR Section (logged-out-view) ── */
+.qr-section {
+  padding: 40px;
+  display: flex;
+  gap: 48px;
+}
+
+.qr-container {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.qr-frame {
+  position: relative;
+  padding: 20px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--border);
+}
+
+/* Animated scanning border */
+.qr-frame::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: calc(var(--radius-lg) + 3px);
+  background: conic-gradient(
+    from 0deg,
+    var(--accent),
+    transparent 60deg,
+    transparent 300deg,
+    var(--accent)
+  );
+  z-index: -1;
+  animation: qr-rotate 3s linear infinite;
+  opacity: 0.7;
+}
+
+.qr-frame::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(var(--radius-lg) + 1px);
+  background: var(--bg-card);
+  z-index: -1;
+}
+
+@keyframes qr-rotate {
+  to { transform: rotate(360deg); }
+}
+
+.qr-area {
+  width: 280px; height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+}
+
+.qr-area img {
+  width: 280px; height: 280px;
+  border-radius: var(--radius-md);
+  object-fit: contain;
+}
+
+.qr-loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.qr-loading-content .material-symbols-outlined {
+  font-size: 56px;
+  color: var(--accent);
+  animation: pulse-icon 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-icon {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.qr-loading-content p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.qr-error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.qr-error-content .material-symbols-outlined {
+  font-size: 48px;
+  color: var(--accent-red);
+}
+
+.qr-error-content p {
+  font-size: 14px;
+  color: var(--accent-red);
+  font-weight: 600;
+}
+
+.btn-retry {
+  padding: 10px 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+}
+
+.btn-retry:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.scan-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.scan-badge-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: blink 1.2s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Steps */
+.steps-section { flex: 1; padding-top: 4px; }
+
+.steps-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+  margin-bottom: 28px;
+}
+
+.steps-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.step-item {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.step-text h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+
+.step-text p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ── Connected View ── */
+.status-view {
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.status-icon-wrap {
+  width: 80px; height: 80px;
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.status-icon-wrap.green {
+  background: var(--accent-dim);
+  box-shadow: 0 0 40px var(--accent-glow);
+}
+
+.status-icon-wrap.green .material-symbols-outlined {
+  font-size: 44px;
+  color: var(--accent);
+}
+
+.status-icon-wrap.amber {
+  background: var(--accent-amber-dim);
+  box-shadow: 0 0 40px rgba(245, 158, 11, 0.15);
+}
+
+.status-icon-wrap.amber .material-symbols-outlined {
+  font-size: 44px;
+  color: var(--accent-amber);
+}
+
+.status-view h2 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.status-view p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+/* Pulsing dot in views */
+.live-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+  position: relative;
+}
+
+.live-dot.green { background: var(--accent); }
+.live-dot.amber { background: var(--accent-amber); }
+
+.live-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.3;
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+
+/* ── Buttons ── */
+.btn-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 12px 28px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(16, 185, 129, 0.35);
+}
+.btn-primary:active { transform: translateY(0); }
+
+.btn-outline {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.btn-outline:hover {
+  background: var(--bg-card);
+  border-color: var(--border-medium);
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background: var(--accent-red-dim);
+  color: var(--accent-red);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+}
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.18);
+  transform: translateY(-1px);
+}
+
+/* ── Side Panel ── */
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tip-card {
+  padding: 28px;
+  background: linear-gradient(135deg, var(--accent-hover), #047857);
+  border-radius: var(--radius-lg);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.tip-card::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tip-card h4 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.tip-card p {
+  font-size: 13px;
+  line-height: 1.6;
+  opacity: 0.9;
+  margin-bottom: 16px;
+}
+
+.tip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  opacity: 0.8;
+}
+
+.tip-badge .material-symbols-outlined { font-size: 14px; }
+
+/* Metrics grid */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.metric-card {
+  padding: 20px;
+  text-align: center;
+}
+
+.metric-value {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.metric-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+}
+
+/* ── Feedback ── */
+#connFeedback {
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+/* ── Mobile Top Bar ── */
+.mobile-topbar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--topbar-height);
+  background: #0e0e16;
+  border-bottom: 1px solid var(--border);
+  z-index: 90;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+}
+
+.hamburger-btn {
+  width: 40px; height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.hamburger-btn:hover { background: var(--bg-card); }
+
+.mobile-brand {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+/* Sidebar overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 95;
+  opacity: 0;
+  transition: opacity var(--transition-smooth);
+}
+.sidebar-overlay.visible { opacity: 1; }
+
+/* ── Mobile Bottom Nav ── */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #0e0e16;
+  border-top: 1px solid var(--border);
+  padding: 8px 16px;
+  z-index: 80;
+  justify-content: space-around;
+  align-items: center;
+  backdrop-filter: blur(16px);
+}
+
+.mob-nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  transition: color var(--transition-fast);
+  padding: 4px 8px;
+}
+
+.mob-nav-link:hover, .mob-nav-link.active {
+  color: var(--accent);
+}
+
+.mob-nav-link .material-symbols-outlined { font-size: 22px; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-medium); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── Selection ── */
+::selection { background: var(--accent-dim); color: var(--accent); }
+
+/* ── Hidden utility ── */
+.hidden { display: none !important; }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .connect-grid { grid-template-columns: 1fr; }
+  .content-wrapper { padding: 32px; }
+}
+
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+
+  .mobile-topbar { display: flex; }
+  .mobile-bottom-nav { display: flex; }
+
+  .main-content { margin-left: 0; padding-top: var(--topbar-height); padding-bottom: 80px; }
+  .content-wrapper { padding: 24px 16px; }
+
+  .page-header h2 { font-size: 24px; }
+
+  .qr-section {
+    flex-direction: column;
+    padding: 24px;
+    gap: 32px;
+    align-items: center;
+  }
+
+  .qr-area { width: 240px; height: 240px; }
+  .qr-area img { width: 240px; height: 240px; }
+
+  .steps-section { text-align: center; }
+  .step-item { flex-direction: column; align-items: center; text-align: center; }
+
+  .status-view { padding: 40px 24px; }
+
+  .btn-actions { flex-direction: column; }
+  .btn { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .qr-area { width: 200px; height: 200px; }
+  .qr-area img { width: 200px; height: 200px; }
+  .qr-frame { padding: 14px; }
+}
 </style>
 </head>
-<body class="bg-surface font-body text-on-surface flex min-h-screen">
-<!-- SideNavBar -->
-<aside class="hidden md:flex flex-col h-screen sticky top-0 py-6 px-4 w-64 border-r border-slate-100 bg-slate-50">
-<div class="mb-10 px-2 flex items-center gap-3">
-  <div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center">
-    <span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">qr_code_2</span>
+<body>
+<div class="app-layout">
+
+<!-- ── Sidebar Overlay (mobile) ── -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-icon">
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">qr_code_2</span>
+    </div>
+    <div class="sidebar-brand-text">
+      <h1>WhatsBridge</h1>
+      <p>by ERPAGENT</p>
+    </div>
   </div>
-  <div>
-    <h1 class="text-lg font-extrabold text-emerald-950 leading-tight">WhatsBridge</h1>
-    <p class="text-[10px] text-slate-500 uppercase tracking-widest">by ERPAGENT</p>
+
+  <!-- Status Indicator -->
+  <div class="sidebar-status">
+    <div id="status-dot" class="status-dot pulsing awaiting"></div>
+    <span id="status-text" class="status-label">Checking...</span>
   </div>
-</div>
-<!-- Status Indicator -->
-<div class="px-2 mb-4">
-  <div class="flex items-center gap-2 px-3 py-2 bg-surface-container-high rounded-xl">
-    <div id="status-dot" class="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse"></div>
-    <span id="status-text" class="text-xs font-semibold text-on-surface-variant">Checking...</span>
+
+  <nav class="sidebar-nav">
+    <a class="nav-link" href="/">
+      <span class="material-symbols-outlined">dashboard</span> Dashboard
+    </a>
+    <a class="nav-link active" href="/connect">
+      <span class="material-symbols-outlined">qr_code_2</span> Connect
+    </a>
+    <a class="nav-link" href="/messages">
+      <span class="material-symbols-outlined">history_edu</span> Messages
+    </a>
+    <a class="nav-link" href="/chat">
+      <span class="material-symbols-outlined">chat_bubble</span> Chat
+    </a>
+    <a class="nav-link" href="/api-keys">
+      <span class="material-symbols-outlined">key</span> API Keys
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="/messages" class="sidebar-cta">
+      <span class="material-symbols-outlined">send</span> New Message
+    </a>
   </div>
-</div>
-<nav class="flex-1 space-y-2">
-  <a class="flex items-center text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 px-3 py-2.5 rounded-xl transition-all" href="/">
-    <span class="material-symbols-outlined mr-3">dashboard</span><span>Dashboard</span>
-  </a>
-  <a class="relative flex items-center text-emerald-700 font-semibold before:absolute before:left-[-16px] before:w-1 before:h-8 before:bg-emerald-600 before:rounded-r-full px-3 py-2.5 rounded-xl" href="/connect">
-    <span class="material-symbols-outlined mr-3">qr_code_2</span><span>Connect</span>
-  </a>
-  <a class="flex items-center text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 px-3 py-2.5 rounded-xl transition-all" href="/messages">
-    <span class="material-symbols-outlined mr-3">history_edu</span><span>Messages</span>
-  </a>
-  <a class="flex items-center text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 px-3 py-2.5 rounded-xl transition-all" href="/chat">
-    <span class="material-symbols-outlined mr-3">chat_bubble</span><span>Chat</span>
-  </a>
-</nav>
-<div class="mt-auto space-y-2 border-t border-slate-100 pt-6">
-  <a href="/messages" class="w-full bg-primary text-on-primary py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all mb-6">
-    <span class="material-symbols-outlined text-sm">add</span> New Message
-  </a>
-</div>
 </aside>
 
-<!-- Main Content -->
-<main class="flex-1 p-6 md:p-12 max-w-7xl mx-auto w-full">
-<div class="mb-12">
-  <h1 class="text-4xl font-extrabold font-headline text-on-surface tracking-tight mb-2">Connect Device</h1>
-  <p class="text-on-surface-variant max-w-lg">Securely link your WhatsApp account to enable automated flows and messaging.</p>
+<!-- ── Mobile Top Bar ── -->
+<div class="mobile-topbar">
+  <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu">
+    <span class="material-symbols-outlined">menu</span>
+  </button>
+  <span class="mobile-brand">WhatsBridge</span>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-  <!-- QR Section (Logged Out View) -->
-  <div id="logged-out-view" class="hidden lg:col-span-8 bg-surface-container-lowest rounded-xl p-8 shadow-[0_20px_40px_rgba(25,28,30,0.06)] flex flex-col md:flex-row gap-10">
-    <div class="flex-shrink-0 flex flex-col items-center">
-      <div class="relative p-4 bg-white border border-outline-variant/20 rounded-xl shadow-inner mb-4">
-        <div id="qr-loading" class="w-64 h-64 bg-slate-50 flex items-center justify-center rounded-lg">
-          <div class="flex flex-col items-center gap-4">
-            <span class="material-symbols-outlined text-6xl text-primary animate-pulse">qr_code_scanner</span>
-            <p class="text-sm text-outline">Generating QR Code...</p>
+<!-- ── Main Content ── -->
+<main class="main-content">
+  <div class="content-wrapper">
+
+    <!-- Header -->
+    <header class="page-header">
+      <h2>Connect Device</h2>
+      <p>Securely link your WhatsApp account to enable automated flows and messaging.</p>
+    </header>
+
+    <div class="connect-grid">
+      <div>
+        <!-- ═══ QR Section (Logged Out View) ═══ -->
+        <div id="logged-out-view" class="glass-card qr-section hidden">
+          <div class="qr-container">
+            <div class="qr-frame">
+              <div id="qr-loading" class="qr-area">
+                <div class="qr-loading-content">
+                  <span class="material-symbols-outlined">qr_code_scanner</span>
+                  <p>Generating QR Code...</p>
+                </div>
+              </div>
+              <div id="qr-display" class="hidden">
+                <img id="qr-image" src="" alt="WhatsApp QR Code" class="qr-area"/>
+              </div>
+              <div id="qr-error" class="hidden qr-area">
+                <div class="qr-error-content">
+                  <span class="material-symbols-outlined">error</span>
+                  <p>Failed to load QR code</p>
+                  <button id="retryQRBtn" class="btn-retry">Retry</button>
+                </div>
+              </div>
+            </div>
+            <div class="scan-badge">
+              <span class="scan-badge-dot"></span>
+              Waiting for scan...
+            </div>
+          </div>
+
+          <div class="steps-section">
+            <h3 class="steps-title">Link a New Device</h3>
+            <ul class="steps-list">
+              <li class="step-item">
+                <span class="step-number">1</span>
+                <div class="step-text">
+                  <h4>Open WhatsApp</h4>
+                  <p>Launch WhatsApp on your phone.</p>
+                </div>
+              </li>
+              <li class="step-item">
+                <span class="step-number">2</span>
+                <div class="step-text">
+                  <h4>Navigate to Settings</h4>
+                  <p>Tap Menu (Android) or Settings (iOS).</p>
+                </div>
+              </li>
+              <li class="step-item">
+                <span class="step-number">3</span>
+                <div class="step-text">
+                  <h4>Select Linked Devices</h4>
+                  <p>Tap Linked Devices then Link a Device.</p>
+                </div>
+              </li>
+              <li class="step-item">
+                <span class="step-number">4</span>
+                <div class="step-text">
+                  <h4>Scan QR Code</h4>
+                  <p>Point your phone at this screen to scan.</p>
+                </div>
+              </li>
+            </ul>
           </div>
         </div>
-        <div id="qr-display" class="hidden">
-          <img id="qr-image" src="" alt="WhatsApp QR Code" class="w-64 h-64 rounded-lg"/>
+
+        <!-- ═══ Connected View ═══ -->
+        <div id="logged-in-view" class="glass-card status-view hidden">
+          <div class="status-icon-wrap green">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+          </div>
+          <h2><span class="live-dot green"></span>WhatsApp Connected</h2>
+          <p>The bot is authenticated and ready to handle messages.</p>
+          <div class="btn-actions">
+            <button id="disconnectBtn" class="btn btn-outline">
+              <span class="material-symbols-outlined" style="font-size:18px;">power_settings_new</span> Disconnect
+            </button>
+            <button id="logoutBtn" class="btn btn-danger">
+              <span class="material-symbols-outlined" style="font-size:18px;">logout</span> Logout (Clear Session)
+            </button>
+          </div>
         </div>
-        <div id="qr-error" class="hidden w-64 h-64 flex flex-col items-center justify-center gap-4">
-          <span class="material-symbols-outlined text-4xl text-error">error</span>
-          <p class="text-sm text-error font-medium">Failed to load QR code</p>
-          <button id="retryQRBtn" class="px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-semibold">Retry</button>
+
+        <!-- ═══ Disconnected View ═══ -->
+        <div id="disconnected-view" class="glass-card status-view hidden">
+          <div class="status-icon-wrap amber">
+            <span class="material-symbols-outlined">wifi_off</span>
+          </div>
+          <h2><span class="live-dot amber"></span>Session Exists but Disconnected</h2>
+          <p>The bot has a saved session but is not connected.</p>
+          <div class="btn-actions">
+            <button id="connectBtn" class="btn btn-primary">
+              <span class="material-symbols-outlined" style="font-size:18px;">power</span> Reconnect
+            </button>
+          </div>
+        </div>
+
+        <!-- ═══ Feedback ═══ -->
+        <div id="connFeedback" class="hidden"></div>
+      </div>
+
+      <!-- ═══ Side Panel ═══ -->
+      <div class="side-panel">
+        <div class="tip-card">
+          <h4>Security Tip</h4>
+          <p>Always ensure you're connecting to the official WhatsBridge dashboard. Log out of unfamiliar devices immediately.</p>
+          <div class="tip-badge">
+            <span class="material-symbols-outlined">verified_user</span> End-to-End Encrypted
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="glass-card metric-card">
+            <div class="metric-value">99.9%</div>
+            <div class="metric-label">Uptime</div>
+          </div>
+          <div class="glass-card metric-card">
+            <div class="metric-value">24/7</div>
+            <div class="metric-label">Sync</div>
+          </div>
         </div>
       </div>
-      <div class="flex items-center gap-2 px-4 py-2 bg-secondary-container/30 rounded-full text-on-secondary-container text-sm font-medium">
-        <span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
-        Waiting for scan...
-      </div>
     </div>
-    <div class="flex-1 py-2">
-      <h2 class="text-2xl font-bold font-headline mb-6 text-emerald-950">Link a New Device</h2>
-      <ul class="space-y-6">
-        <li class="flex gap-4">
-          <span class="flex-shrink-0 w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold text-sm">1</span>
-          <div><p class="font-semibold">Open WhatsApp</p><p class="text-sm text-on-surface-variant">Launch WhatsApp on your phone.</p></div>
-        </li>
-        <li class="flex gap-4">
-          <span class="flex-shrink-0 w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold text-sm">2</span>
-          <div><p class="font-semibold">Navigate to Settings</p><p class="text-sm text-on-surface-variant">Tap Menu (Android) or Settings (iOS).</p></div>
-        </li>
-        <li class="flex gap-4">
-          <span class="flex-shrink-0 w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold text-sm">3</span>
-          <div><p class="font-semibold">Select Linked Devices</p><p class="text-sm text-on-surface-variant">Tap Linked Devices then Link a Device.</p></div>
-        </li>
-        <li class="flex gap-4">
-          <span class="flex-shrink-0 w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold text-sm">4</span>
-          <div><p class="font-semibold">Scan QR Code</p><p class="text-sm text-on-surface-variant">Point your phone at this screen.</p></div>
-        </li>
-      </ul>
-    </div>
-  </div>
 
-  <!-- Connected View -->
-  <div id="logged-in-view" class="hidden lg:col-span-8 bg-surface-container-lowest rounded-xl p-8 shadow-[0_20px_40px_rgba(25,28,30,0.06)]">
-    <div class="text-center py-8">
-      <div class="w-20 h-20 bg-secondary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-        <span class="material-symbols-outlined text-5xl text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-      </div>
-      <h2 class="text-2xl font-headline font-bold text-on-surface mb-2">WhatsApp Connected</h2>
-      <p class="text-on-surface-variant mb-8">The bot is authenticated and ready to handle messages.</p>
-      <div class="flex gap-4 justify-center">
-        <button id="disconnectBtn" class="px-6 py-3 bg-surface-container-high text-on-surface font-semibold rounded-xl hover:bg-surface-container-highest transition-all">Disconnect</button>
-        <button id="logoutBtn" class="px-6 py-3 bg-error-container text-on-error-container font-semibold rounded-xl hover:bg-error/20 transition-all">Logout (Clear Session)</button>
-      </div>
-    </div>
   </div>
-
-  <!-- Disconnected View -->
-  <div id="disconnected-view" class="hidden lg:col-span-8 bg-surface-container-lowest rounded-xl p-8 shadow-[0_20px_40px_rgba(25,28,30,0.06)]">
-    <div class="text-center py-8">
-      <div class="w-20 h-20 bg-yellow-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-        <span class="material-symbols-outlined text-5xl text-yellow-600">wifi_off</span>
-      </div>
-      <h2 class="text-2xl font-headline font-bold text-on-surface mb-2">Session Exists but Disconnected</h2>
-      <p class="text-on-surface-variant mb-8">The bot has a saved session but is not connected.</p>
-      <button id="connectBtn" class="px-8 py-3 bg-primary text-on-primary font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">Reconnect</button>
-    </div>
-  </div>
-
-  <!-- Side Panel -->
-  <div class="lg:col-span-4 flex flex-col gap-6">
-    <div class="bg-gradient-to-br from-primary to-primary-container p-6 rounded-xl text-white">
-      <h4 class="font-bold mb-2">Security Tip</h4>
-      <p class="text-sm opacity-90 leading-relaxed mb-4">Always ensure you're connecting to the official WhatsBridge dashboard. Log out of unfamiliar devices immediately.</p>
-      <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
-        <span class="material-symbols-outlined text-sm">verified_user</span> End-to-End Encrypted
-      </div>
-    </div>
-    <!-- Metrics -->
-    <div class="grid grid-cols-2 gap-3">
-      <div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/10">
-        <span class="block text-2xl font-headline font-bold text-primary mb-1">99.9%</span>
-        <span class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Uptime</span>
-      </div>
-      <div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/10">
-        <span class="block text-2xl font-headline font-bold text-primary mb-1">24/7</span>
-        <span class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Sync</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="connFeedback" class="hidden mt-6 px-4 py-3 rounded-xl text-sm font-medium text-center"></div>
 </main>
 
-<!-- Mobile Bottom Nav -->
-<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md px-6 py-3 flex justify-around items-center border-t border-slate-100 z-50">
-  <a href="/"><span class="material-symbols-outlined text-slate-400">dashboard</span></a>
-  <a href="/connect"><span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">qr_code_2</span></a>
-  <a href="/messages"><span class="material-symbols-outlined text-slate-400">history_edu</span></a>
-  <a href="/chat"><span class="material-symbols-outlined text-slate-400">chat_bubble</span></a>
+</div><!-- /.app-layout -->
+
+<!-- ── Mobile Bottom Nav ── -->
+<nav class="mobile-bottom-nav">
+  <a class="mob-nav-link" href="/">
+    <span class="material-symbols-outlined">dashboard</span> Dashboard
+  </a>
+  <a class="mob-nav-link active" href="/connect">
+    <span class="material-symbols-outlined">qr_code_2</span> Connect
+  </a>
+  <a class="mob-nav-link" href="/messages">
+    <span class="material-symbols-outlined">history_edu</span> Messages
+  </a>
+  <a class="mob-nav-link" href="/chat">
+    <span class="material-symbols-outlined">chat_bubble</span> Chat
+  </a>
 </nav>
+
+<!-- ── Mobile sidebar toggle ── -->
+<script>
+(function() {
+  var hamburger = document.getElementById('hamburger-btn');
+  var sidebar = document.getElementById('sidebar');
+  var overlay = document.getElementById('sidebar-overlay');
+
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.style.display = 'block';
+    requestAnimationFrame(function() { overlay.classList.add('visible'); });
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('visible');
+    setTimeout(function() { overlay.style.display = 'none'; }, 350);
+  }
+
+  if (hamburger) hamburger.addEventListener('click', openSidebar);
+  if (overlay) overlay.addEventListener('click', closeSidebar);
+})();
+</script>
+
+<!-- ── apiFetch wrapper (401/403 → redirect to login) ── -->
+<script>
+async function apiFetch(url, opts = {}) {
+  const res = await fetch(url, opts);
+  if (res.status === 401 || res.status === 403) {
+    window.location.href = '/login';
+    throw new Error('Unauthorized');
+  }
+  return res;
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="js/app.js"></script>
-</body></html>
+</body>
+</html>

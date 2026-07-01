@@ -1,167 +1,818 @@
 <!DOCTYPE html>
-<html class="light" lang="en"><head>
+<html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Chat | WhatsBridge by ERPAGENT</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@700;800&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<script>
-  tailwind.config = {
-    darkMode: "class",
-    theme: {
-      extend: {
-        colors: {
-          "surface-container-lowest":"#ffffff","surface":"#f7f9fc","inverse-surface":"#2d3133",
-          "primary":"#00453d","on-primary":"#ffffff","background":"#f7f9fc","outline":"#6f7976",
-          "surface-dim":"#d8dadd","primary-fixed":"#a8f0e3","on-primary-fixed":"#00201c",
-          "on-surface":"#191c1e","error":"#ba1a1a","primary-container":"#075e54",
-          "surface-container-high":"#e6e8eb","surface-container-low":"#f2f4f7",
-          "secondary-container":"#5dfd8a","surface-variant":"#e0e3e6","on-secondary":"#ffffff",
-          "on-surface-variant":"#3f4946","outline-variant":"#bec9c5",
-          "on-primary-container":"#8dd5c8","secondary":"#006d2f","surface-container":"#eceef1",
-          "on-secondary-container":"#007232",
-        },
-        fontFamily: {"headline":["Manrope"],"body":["Inter"],"label":["Inter"]},
-        borderRadius: {"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},
-      },
-    },
-  }
-</script>
 <style>
-.material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24 }
-.chat-bg-pattern { background-color: #f7f9fc; opacity: 0.05 }
-::-webkit-scrollbar { width: 6px }
-::-webkit-scrollbar-track { background: transparent }
-::-webkit-scrollbar-thumb { background: #bec9c5; border-radius: 10px }
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-card: #12121a;
+  --bg-input: #1a1a2e;
+  --accent: #10b981;
+  --accent-hover: #059669;
+  --accent-glow: rgba(16,185,129,0.15);
+  --secondary: #6366f1;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --border: rgba(255,255,255,0.08);
+  --bubble-sent: #10b981;
+  --bubble-received: #1e293b;
+  --danger: #ef4444;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+body {
+  display: flex;
+}
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+/* ───── Sidebar ───── */
+.sidebar {
+  display: none;
+  flex-direction: column;
+  width: 250px;
+  min-width: 250px;
+  height: 100%;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  padding: 24px 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  padding: 0 8px;
+}
+.sidebar-brand-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), #059669);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(16,185,129,0.3);
+}
+.sidebar-brand h1 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+.sidebar-brand p {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: 4px;
+}
+.sidebar nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sidebar nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: 10px;
+  transition: all 0.25s ease;
+  position: relative;
+}
+.sidebar nav a:hover {
+  color: var(--accent);
+  background: rgba(16,185,129,0.08);
+  transform: translateX(2px);
+}
+.sidebar nav a.active {
+  color: var(--accent);
+  font-weight: 600;
+  background: rgba(16,185,129,0.06);
+}
+.sidebar nav a.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 24px;
+  background: var(--accent);
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+.sidebar-footer {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.sidebar-footer a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  color: var(--danger);
+  text-decoration: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.sidebar-footer a:hover {
+  background: rgba(239,68,68,0.08);
+  transform: translateX(2px);
+}
+
+/* ───── Main Layout ───── */
+.main-content {
+  flex: 1;
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ───── Contact List ───── */
+#contact-list {
+  width: 320px;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease;
+}
+.contact-header {
+  padding: 20px 20px 16px;
+}
+.contact-header h2 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.contact-header h2 .material-symbols-outlined {
+  font-size: 22px;
+  font-variation-settings: "FILL" 1;
+}
+.search-wrap {
+  position: relative;
+}
+.search-wrap .material-symbols-outlined {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+#search-input {
+  width: 100%;
+  padding: 10px 16px 10px 40px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+#search-input::placeholder { color: var(--text-secondary); opacity: 0.6; }
+#search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+}
+#search-input:focus ~ .material-symbols-outlined { color: var(--accent); }
+#contacts {
+  flex: 1;
+  overflow-y: auto;
+}
+.contacts-empty {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.contacts-empty .material-symbols-outlined {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 8px;
+  opacity: 0.3;
+  color: var(--accent);
+}
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+.contact-item:hover {
+  background: rgba(255,255,255,0.03);
+}
+.contact-item.active {
+  background: rgba(16,185,129,0.06);
+  border-left-color: var(--accent);
+}
+.contact-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(16,185,129,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+.contact-item:hover .contact-avatar {
+  transform: scale(1.05);
+}
+.contact-avatar .material-symbols-outlined { color: var(--accent); }
+.contact-info { flex: 1; min-width: 0; }
+.contact-info-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 2px;
+}
+.contact-info-top h3 {
+  font-weight: 600;
+  font-family: 'Inter', monospace;
+  font-size: 13px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.contact-info-top span {
+  font-size: 10px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+.contact-info p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ───── Chat Window ───── */
+.chat-window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease;
+}
+
+/* Subtle pattern overlay for chat bg */
+.chat-window::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 20% 50%, rgba(16,185,129,0.03) 0%, transparent 50%),
+                     radial-gradient(circle at 80% 20%, rgba(99,102,241,0.02) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Chat Header */
+#chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: rgba(18,18,26,0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  z-index: 10;
+}
+.chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.back-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  margin-left: -8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+.back-btn:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--accent);
+}
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(99,102,241,0.2);
+}
+.chat-avatar .material-symbols-outlined { color: var(--secondary); }
+#chat-name {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+#chat-status {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+#bot-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 100px;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+.bot-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  transition: background 0.3s ease;
+}
+
+/* Messages */
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+.msg-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding-top: 8px;
+  gap: 12px;
+}
+.msg-placeholder .material-symbols-outlined {
+  font-size: 56px;
+  color: var(--accent);
+  opacity: 0.15;
+}
+.msg-placeholder span {
+  padding: 6px 16px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+}
+
+/* ── Bubbles ── */
+.bubble-row {
+  display: flex;
+  position: relative;
+  z-index: 1;
+  animation: bubbleIn 0.25s ease-out;
+}
+@keyframes bubbleIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.bubble-row.sent { justify-content: flex-end; }
+.bubble-row.received { justify-content: flex-start; }
+.bubble {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.2);
+  transition: transform 0.15s ease;
+}
+.bubble:hover {
+  transform: scale(1.01);
+}
+.bubble.sent {
+  background: linear-gradient(135deg, var(--bubble-sent), #059669);
+  color: #ecfdf5;
+  border-bottom-right-radius: 4px;
+}
+.bubble.received {
+  background: var(--bubble-received);
+  color: var(--text-primary);
+  border-bottom-left-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.bubble-meta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+.bubble-time {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.bubble.sent .bubble-time { color: rgba(236,253,245,0.5); }
+.bubble.received .bubble-time { color: var(--text-secondary); }
+.bubble-meta .material-symbols-outlined { font-size: 14px; }
+.bubble.sent .bubble-meta .status-icon { color: rgba(236,253,245,0.45); }
+.bubble.sent .bubble-meta .error-icon { color: #fca5a5; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin-icon { animation: spin 1s linear infinite; }
+
+/* ── Input Bar ── */
+.input-bar {
+  padding: 14px 20px;
+  background: rgba(18,18,26,0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  z-index: 10;
+}
+.input-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-input);
+  padding: 6px 8px 6px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.input-bar-inner:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(16,185,129,0.08);
+}
+#phone-input {
+  width: 120px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: 'Inter', monospace;
+  padding: 6px 0;
+}
+#phone-input::placeholder { color: var(--text-secondary); opacity: 0.5; }
+.input-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+#msg-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 13px;
+  padding: 6px 4px;
+}
+#msg-input::placeholder { color: var(--text-secondary); opacity: 0.5; }
+#msg-input:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.attach-btn {
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.attach-btn:hover {
+  color: var(--accent);
+  background: rgba(16,185,129,0.08);
+}
+.attach-btn .material-symbols-outlined { font-size: 20px; }
+
+#send-btn {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--accent), #059669);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(16,185,129,0.3);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+#send-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(16,185,129,0.4);
+}
+#send-btn:active { transform: scale(0.94); }
+#send-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  background: var(--bg-input);
+}
+
+/* ───── Mobile Bottom Nav ───── */
+.mobile-nav {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(18,18,26,0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 0 12px;
+  z-index: 50;
+}
+.mobile-nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+.mobile-nav a:hover { color: var(--accent); }
+.mobile-nav a.active { color: var(--accent); }
+.mobile-nav a.active span:last-child { font-weight: 700; }
+.mobile-nav a .material-symbols-outlined { font-size: 22px; }
+
+/* ───── Responsive ───── */
+@media (min-width: 768px) {
+  .sidebar { display: flex; }
+  .back-btn { display: none !important; }
+  .mobile-nav { display: none; }
+}
+@media (max-width: 767px) {
+  .sidebar { display: none; }
+  #contact-list {
+    width: 100%;
+    min-width: 100%;
+    padding-bottom: 64px;
+  }
+  .chat-window {
+    display: none;
+    width: 100%;
+  }
+  .back-btn { display: flex; }
+  .input-bar {
+    padding-bottom: 76px;
+  }
+}
 </style>
 </head>
-<body class="bg-surface font-body text-on-surface flex h-screen overflow-hidden">
+<body>
 <!-- Side Navigation -->
-<aside class="hidden md:flex flex-col h-full sticky top-0 py-6 px-4 w-64 border-r border-slate-100 bg-slate-50 font-medium text-sm">
-<div class="flex items-center gap-3 mb-8 px-2">
-<div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-lg shadow-primary/20">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat</span>
-</div>
-<div>
-<h1 class="text-lg font-extrabold text-emerald-950 leading-none font-headline">WhatsBridge</h1>
-<p class="text-[10px] text-slate-500 uppercase tracking-widest mt-1">by ERPAGENT</p>
-</div>
-</div>
-<nav class="flex-1 space-y-1">
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-300 rounded-lg" href="/">
-<span class="material-symbols-outlined">dashboard</span><span>Dashboard</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-300 rounded-lg" href="/connect">
-<span class="material-symbols-outlined">qr_code_2</span><span>Connect</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-300 rounded-lg" href="/messages">
-<span class="material-symbols-outlined">history_edu</span><span>Messages</span>
-</a>
-<a class="relative flex items-center gap-3 px-4 py-3 text-emerald-700 font-semibold before:absolute before:left-0 before:w-1 before:h-8 before:bg-emerald-600 before:rounded-r-full hover:bg-emerald-50/50 transition-all duration-300" href="/chat">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat_bubble</span><span>Chat</span>
-</a>
-</nav>
-<div class="pt-6 border-t border-slate-100 space-y-1">
-<a class="flex items-center gap-3 px-4 py-3 text-error hover:bg-red-50/50 transition-colors rounded-lg cursor-pointer" onclick="doLogout()">
-<span class="material-symbols-outlined">logout</span><span>Logout</span>
-</a>
-</div>
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-icon">
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat</span>
+    </div>
+    <div>
+      <h1>WhatsBridge</h1>
+      <p>by ERPAGENT</p>
+    </div>
+  </div>
+  <nav>
+    <a href="/">
+      <span class="material-symbols-outlined">dashboard</span><span>Dashboard</span>
+    </a>
+    <a href="/connect">
+      <span class="material-symbols-outlined">qr_code_2</span><span>Connect</span>
+    </a>
+    <a href="/messages">
+      <span class="material-symbols-outlined">history_edu</span><span>Messages</span>
+    </a>
+    <a href="/chat" class="active">
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat_bubble</span><span>Chat</span>
+    </a>
+    <a href="/api-keys">
+      <span class="material-symbols-outlined">key</span><span>API Keys</span>
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <a onclick="doLogout()">
+      <span class="material-symbols-outlined">logout</span><span>Logout</span>
+    </a>
+  </div>
 </aside>
 
 <!-- Main Content: Chat Layout -->
-<main class="flex-1 flex flex-col md:flex-row h-full overflow-hidden bg-surface">
-<!-- Left: Contact List -->
-<section id="contact-list" class="w-full md:w-80 lg:w-96 flex flex-col bg-surface-container-low border-r border-outline-variant/15">
-<div class="p-4 space-y-4 bg-surface-container-low/50 backdrop-blur-sm">
-<div class="flex items-center justify-between">
-<h2 class="text-xl font-headline font-extrabold text-primary">Contacts</h2>
-</div>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
-<input id="search-input" class="w-full pl-10 pr-4 py-2 bg-surface-container-high border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-outline/60" placeholder="Search by phone number..." type="text"/>
-</div>
-</div>
-<div id="contacts" class="flex-1 overflow-y-auto">
-<div class="p-8 text-center text-outline text-sm">
-<span class="material-symbols-outlined text-4xl mb-2 block opacity-40">chat_bubble_outline</span>
-Enter a phone number to start a conversation
-</div>
-</div>
-</section>
+<main class="main-content">
+  <!-- Left: Contact List -->
+  <section id="contact-list">
+    <div class="contact-header">
+      <h2>
+        <span class="material-symbols-outlined">forum</span>
+        Contacts
+      </h2>
+      <div class="search-wrap">
+        <span class="material-symbols-outlined">search</span>
+        <input id="search-input" placeholder="Search by phone number..." type="text"/>
+      </div>
+    </div>
+    <div id="contacts">
+      <div class="contacts-empty">
+        <span class="material-symbols-outlined">chat_bubble_outline</span>
+        Enter a phone number to start a conversation
+      </div>
+    </div>
+  </section>
 
-<!-- Right: Chat Window -->
-<section class="flex-1 flex flex-col relative bg-surface-container-lowest overflow-hidden">
-<!-- Chat Header -->
-<header id="chat-header" class="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-md border-b border-outline-variant/10 z-10">
-<div class="flex items-center gap-4">
-<button class="md:hidden p-1 -ml-2 hover:bg-surface-container-high rounded-full" onclick="showContacts()">
-<span class="material-symbols-outlined">arrow_back</span>
-</button>
-<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center">
-<span class="material-symbols-outlined text-primary">person</span>
-</div>
-<div>
-<h2 id="chat-name" class="font-headline font-bold text-on-surface leading-tight">Select a contact</h2>
-<p id="chat-status" class="text-xs text-outline">or enter a phone number</p>
-</div>
-</div>
-<div class="flex items-center gap-2">
-<div id="bot-indicator" class="flex items-center gap-1 px-3 py-1 rounded-full bg-surface-container-high text-outline text-xs">
-<span class="w-2 h-2 rounded-full bg-outline"></span>
-<span>Checking...</span>
-</div>
-</div>
-</header>
+  <!-- Right: Chat Window -->
+  <section class="chat-window">
+    <!-- Chat Header -->
+    <header id="chat-header">
+      <div class="chat-header-left">
+        <button class="back-btn" onclick="showContacts()">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <div class="chat-avatar">
+          <span class="material-symbols-outlined">person</span>
+        </div>
+        <div>
+          <h2 id="chat-name">Select a contact</h2>
+          <p id="chat-status">or enter a phone number</p>
+        </div>
+      </div>
+      <div>
+        <div id="bot-indicator">
+          <span class="bot-dot"></span>
+          <span>Checking...</span>
+        </div>
+      </div>
+    </header>
 
-<!-- Messages Area -->
-<div id="messages" class="flex-1 overflow-y-auto p-6 space-y-4 relative">
-<div class="absolute inset-0 chat-bg-pattern pointer-events-none"></div>
-<div class="relative z-10 flex justify-center">
-<span class="px-3 py-1 bg-surface-container-high/60 backdrop-blur-sm text-[10px] font-bold text-outline rounded-full uppercase tracking-wider">Start a conversation</span>
-</div>
-</div>
+    <!-- Messages Area -->
+    <div id="messages">
+      <div class="msg-placeholder">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat</span>
+        <span>Start a conversation</span>
+      </div>
+    </div>
 
-<!-- Input Bar -->
-<footer class="p-4 bg-white border-t border-outline-variant/10 z-10">
-<div class="flex items-center gap-3 bg-surface-container-low p-2 rounded-2xl">
-<div class="flex-1 flex items-center gap-2">
-<input id="phone-input" class="w-32 bg-transparent border-none focus:ring-0 text-sm py-1 placeholder:text-outline/60 font-mono" placeholder="91XXXXXXXXXX" type="text"/>
-<div class="w-px h-6 bg-outline-variant/30"></div>
-<input id="msg-input" class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1 placeholder:text-outline/60" placeholder="Type a message..." type="text" disabled/>
-</div>
-<button id="send-btn" class="w-10 h-10 bg-primary text-on-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed" onclick="sendMessage()" disabled>
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
-</button>
-</div>
-</footer>
-</section>
+    <!-- Input Bar -->
+    <footer class="input-bar">
+      <div class="input-bar-inner">
+        <input id="phone-input" placeholder="91XXXXXXXXXX" type="text"/>
+        <div class="input-divider"></div>
+        <input id="msg-input" placeholder="Type a message..." type="text" disabled/>
+        <button class="attach-btn" title="Attach file">
+          <span class="material-symbols-outlined">attach_file</span>
+        </button>
+        <button id="send-btn" onclick="sendMessage()" disabled>
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+        </button>
+      </div>
+    </footer>
+  </section>
 </main>
+
+<!-- Mobile Bottom Nav -->
+<nav class="mobile-nav">
+  <a href="/">
+    <span class="material-symbols-outlined">dashboard</span>
+    <span>Home</span>
+  </a>
+  <a href="/messages">
+    <span class="material-symbols-outlined">history_edu</span>
+    <span>Messages</span>
+  </a>
+  <a href="/connect">
+    <span class="material-symbols-outlined">qr_code_2</span>
+    <span>Connect</span>
+  </a>
+  <a href="/chat" class="active">
+    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+    <span>Chat</span>
+  </a>
+</nav>
 
 <script>
 let currentPhone = '';
 let conversations = {}; // phone -> [{from, text, time}]
 
-// Check bot status
-async function checkBot() {
-    try {
-        const res = await fetch('/api/status');
-        const data = await res.json();
-        const el = document.getElementById('bot-indicator');
-        if (data.connected && data.loggedIn) {
-            el.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span><span>Bot Online</span>';
-            el.className = 'flex items-center gap-1 px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs';
-        } else {
-            el.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span><span>Bot Offline</span>';
-            el.className = 'flex items-center gap-1 px-3 py-1 rounded-full bg-red-50 text-red-700 text-xs';
-        }
-    } catch(e) {
-        const el = document.getElementById('bot-indicator');
-        el.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span><span>Disconnected</span>';
+// ─── apiFetch wrapper (401/403 → redirect to login) ───
+async function apiFetch(url, opts = {}) {
+    const res = await fetch(url, opts);
+    if (res.status === 401 || res.status === 403) {
+        window.location.href = '/login';
+        throw new Error('Unauthorized');
+    }
+    return res;
+}
+
+// ─── Mobile: show contacts / show chat ───
+function showContacts() {
+    document.getElementById('contact-list').style.display = 'flex';
+    document.querySelector('.chat-window').style.display = 'none';
+}
+
+function showChat() {
+    if (window.innerWidth < 768) {
+        document.getElementById('contact-list').style.display = 'none';
+        document.querySelector('.chat-window').style.display = 'flex';
     }
 }
 
-// Phone input handler
+// ─── Check bot status ───
+async function checkBot() {
+    try {
+        const res = await apiFetch('/api/status');
+        const data = await res.json();
+        const el = document.getElementById('bot-indicator');
+        if (data.connected && data.loggedIn) {
+            el.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:#10b981;"></span><span>Bot Online</span>';
+            el.style.background = 'rgba(16,185,129,0.1)';
+            el.style.color = '#10b981';
+        } else {
+            el.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:#ef4444;"></span><span>Bot Offline</span>';
+            el.style.background = 'rgba(239,68,68,0.1)';
+            el.style.color = '#ef4444';
+        }
+    } catch(e) {
+        const el = document.getElementById('bot-indicator');
+        el.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:#ef4444;"></span><span>Disconnected</span>';
+        el.style.background = 'rgba(239,68,68,0.1)';
+        el.style.color = '#ef4444';
+    }
+}
+
+// ─── Phone input handler ───
 document.getElementById('phone-input').addEventListener('input', function() {
     const phone = this.value.replace(/[^0-9]/g, '');
     this.value = phone;
@@ -188,6 +839,17 @@ document.getElementById('msg-input').addEventListener('keydown', function(e) {
     }
 });
 
+// ─── Search contacts ───
+document.getElementById('search-input').addEventListener('input', function() {
+    const query = this.value.replace(/[^0-9]/g, '');
+    const items = document.querySelectorAll('.contact-item');
+    items.forEach(item => {
+        const phone = item.querySelector('h3').textContent;
+        item.style.display = phone.includes(query) ? 'flex' : 'none';
+    });
+});
+
+// ─── Send message ───
 async function sendMessage() {
     const phone = currentPhone;
     const msgInput = document.getElementById('msg-input');
@@ -205,7 +867,7 @@ async function sendMessage() {
 
     // Send via API
     try {
-        const res = await fetch('/api/send', {
+        const res = await apiFetch('/api/send', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ to: phone, message: msg }),
@@ -224,63 +886,59 @@ async function sendMessage() {
     }
 }
 
+// ─── Load conversation ───
 function loadConversation(phone) {
     renderMessages(phone);
     updateContactList();
 }
 
+// ─── Render messages ───
 function renderMessages(phone) {
     const container = document.getElementById('messages');
     const msgs = conversations[phone] || [];
 
     if (msgs.length === 0) {
-        container.innerHTML = `
-            <div class="absolute inset-0 chat-bg-pattern pointer-events-none"></div>
-            <div class="relative z-10 flex justify-center">
-                <span class="px-3 py-1 bg-surface-container-high/60 backdrop-blur-sm text-[10px] font-bold text-outline rounded-full uppercase tracking-wider">Send your first message</span>
-            </div>`;
+        container.innerHTML = '<div class="msg-placeholder"><span class="material-symbols-outlined" style="font-variation-settings:\'FILL\' 1;">chat</span><span>Send your first message</span></div>';
         return;
     }
 
-    let html = '<div class="absolute inset-0 chat-bg-pattern pointer-events-none"></div>';
+    let html = '';
     msgs.forEach(m => {
         if (m.from === 'me') {
-            html += `
-            <div class="flex justify-end relative z-10">
-                <div class="max-w-[70%] bg-primary-container p-3 rounded-2xl rounded-tr-none shadow-md">
-                    <p class="text-sm text-on-primary-container leading-relaxed">${escapeHtml(m.text)}</p>
-                    <div class="flex justify-end items-center gap-1 mt-1">
-                        <span class="text-[9px] text-on-primary-container/60 uppercase font-bold">${m.time}</span>
-                        ${m.error ? '<span class="material-symbols-outlined text-[14px] text-red-300" title="'+escapeHtml(m.error)+'">error</span>' :
-                          m.sent ? '<span class="material-symbols-outlined text-[14px] text-on-primary-container/60" style="font-variation-settings: \'FILL\' 1;">done_all</span>' :
-                          '<span class="material-symbols-outlined text-[14px] text-on-primary-container/40 animate-spin">progress_activity</span>'}
-                    </div>
-                </div>
-            </div>`;
+            let statusIcon = '';
+            if (m.error) {
+                statusIcon = '<span class="material-symbols-outlined error-icon" style="font-size:14px;color:#fca5a5;" title="' + escapeHtml(m.error) + '">error</span>';
+            } else if (m.sent) {
+                statusIcon = '<span class="material-symbols-outlined status-icon" style="font-size:14px;color:rgba(236,253,245,0.45);font-variation-settings:\'FILL\' 1;">done_all</span>';
+            } else {
+                statusIcon = '<span class="material-symbols-outlined spin-icon" style="font-size:14px;color:rgba(236,253,245,0.3);">progress_activity</span>';
+            }
+            html += '<div class="bubble-row sent">'
+                + '<div class="bubble sent">'
+                + '<p>' + escapeHtml(m.text) + '</p>'
+                + '<div class="bubble-meta"><span class="bubble-time">' + m.time + '</span>' + statusIcon + '</div>'
+                + '</div></div>';
         } else {
-            html += `
-            <div class="flex justify-start relative z-10">
-                <div class="max-w-[70%] bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-outline-variant/5">
-                    <p class="text-sm text-on-surface leading-relaxed">${escapeHtml(m.text)}</p>
-                    <div class="flex justify-end mt-1">
-                        <span class="text-[9px] text-outline uppercase font-bold">${m.time}</span>
-                    </div>
-                </div>
-            </div>`;
+            html += '<div class="bubble-row received">'
+                + '<div class="bubble received">'
+                + '<p>' + escapeHtml(m.text) + '</p>'
+                + '<div class="bubble-meta"><span class="bubble-time">' + m.time + '</span></div>'
+                + '</div></div>';
         }
     });
     container.innerHTML = html;
     container.scrollTop = container.scrollHeight;
 }
 
+// ─── Update contact list ───
 function updateContactList() {
     const container = document.getElementById('contacts');
     const phones = Object.keys(conversations).filter(p => conversations[p].length > 0);
     if (phones.length === 0) {
-        container.innerHTML = `<div class="p-8 text-center text-outline text-sm">
-            <span class="material-symbols-outlined text-4xl mb-2 block opacity-40">chat_bubble_outline</span>
-            Enter a phone number to start a conversation
-        </div>`;
+        container.innerHTML = '<div class="contacts-empty">'
+            + '<span class="material-symbols-outlined">chat_bubble_outline</span>'
+            + 'Enter a phone number to start a conversation'
+            + '</div>';
         return;
     }
 
@@ -289,23 +947,17 @@ function updateContactList() {
         const msgs = conversations[phone];
         const last = msgs[msgs.length - 1];
         const isActive = phone === currentPhone;
-        html += `
-        <div class="flex items-center gap-3 p-4 cursor-pointer transition-all ${isActive ? 'bg-surface-container-lowest border-l-4 border-secondary' : 'hover:bg-surface-container-high/50'}" onclick="selectContact('${phone}')">
-            <div class="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center flex-shrink-0">
-                <span class="material-symbols-outlined text-primary">person</span>
-            </div>
-            <div class="flex-1 min-w-0">
-                <div class="flex justify-between items-baseline mb-0.5">
-                    <h3 class="font-semibold text-on-surface truncate font-mono text-sm">${phone}</h3>
-                    <span class="text-[10px] text-outline">${last.time}</span>
-                </div>
-                <p class="text-xs text-outline truncate">${escapeHtml(last.text)}</p>
-            </div>
-        </div>`;
+        html += '<div class="contact-item' + (isActive ? ' active' : '') + '" onclick="selectContact(\'' + phone + '\')">'
+            + '<div class="contact-avatar"><span class="material-symbols-outlined">person</span></div>'
+            + '<div class="contact-info">'
+            + '<div class="contact-info-top"><h3>' + phone + '</h3><span>' + last.time + '</span></div>'
+            + '<p>' + escapeHtml(last.text) + '</p>'
+            + '</div></div>';
     });
     container.innerHTML = html;
 }
 
+// ─── Select contact ───
 function selectContact(phone) {
     currentPhone = phone;
     document.getElementById('phone-input').value = phone;
@@ -315,20 +967,25 @@ function selectContact(phone) {
     document.getElementById('chat-status').textContent = 'WhatsApp';
     renderMessages(phone);
     updateContactList();
+    showChat();
 }
 
+// ─── Escape HTML ───
 function escapeHtml(text) {
     const d = document.createElement('div');
     d.textContent = text;
     return d.innerHTML;
 }
 
+// ─── Logout (with try-catch, always redirects) ───
 async function doLogout() {
-    await fetch('/api/auth/logout', {method:'POST'});
+    try {
+        await apiFetch('/api/auth/logout', {method:'POST'});
+    } catch(e) { /* ignore */ }
     window.location.href = '/login';
 }
 
-// Init
+// ─── Init ───
 checkBot();
 setInterval(checkBot, 15000);
 </script>
