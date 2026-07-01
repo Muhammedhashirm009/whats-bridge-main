@@ -16,6 +16,7 @@ import (
 	"github.com/mdp/qrterminal/v3"
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
+	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
@@ -63,6 +64,18 @@ func EventHandler(evt interface{}) {
 	switch v := evt.(type) {
 	case *events.Message:
 		fmt.Printf("Received a message from %s: %s\n", v.Info.Sender.User, v.Message.GetConversation())
+	case *events.LoggedOut:
+		log.Printf("WhatsApp session was logged out/revoked: %v. Clearing local store...", v.Reason)
+		QRMutex.Lock()
+		CurrentQR = ""
+		QRMutex.Unlock()
+		
+		// Disconnect client and re-trigger StartClient to wait for new QR scan
+		c := GetClient()
+		if c != nil {
+			c.Disconnect()
+		}
+		go StartClient()
 	}
 }
 
@@ -99,10 +112,31 @@ func StartClient() {
 		return
 	}
 
-	deviceStore, err := c.GetFirstDevice(context.Background())
+	// GetAllDevices to find existing sessions
+	devices, err := c.GetAllDevices(context.Background())
 	if err != nil {
 		log.Printf("Failed to get device store: %v", err)
 		return
+	}
+
+	var deviceStore *store.Device
+	if len(devices) > 0 {
+		// Use the latest logged device session
+		deviceStore = devices[len(devices)-1]
+		
+		// Clean up any other stale devices from DB to avoid session lookup conflicts
+		if len(devices) > 1 {
+			log.Printf("Found %d device sessions. Keeping latest and cleaning up %d stale sessions...", len(devices), len(devices)-1)
+			for i := 0; i < len(devices)-1; i++ {
+				err = c.DeleteDevice(context.Background(), devices[i])
+				if err != nil {
+					log.Printf("Failed to delete stale device session: %v", err)
+				}
+			}
+		}
+	} else {
+		// No device exists, instantiate a new device record
+		deviceStore = c.NewDevice()
 	}
 
 	clientLog := waLog.Stdout("Client", "WARN", true)
@@ -145,6 +179,14 @@ func StartClient() {
 					}
 				}
 			}
+
+			// QR channel closed (either timed out or successfully scanned)
+			QRMutex.Lock()
+			if CurrentQR != "" {
+				log.Println("WhatsApp QR code channel closed or expired.")
+				CurrentQR = "EXPIRED"
+			}
+			QRMutex.Unlock()
 		}()
 	} else {
 		err = client.Connect()
