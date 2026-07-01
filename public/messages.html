@@ -729,6 +729,90 @@
 
   /* ── Helper ── */
   .opacity-60 { opacity: 0.6; }
+
+  /* ── Mobile UI Optimizations ── */
+  @media (max-width: 600px) {
+    .tab-bar {
+      width: 100%;
+      display: flex;
+      gap: 2px;
+      border-radius: 12px;
+      padding: 4px;
+    }
+    
+    .tab-btn {
+      flex: 1;
+      padding: 8px 6px;
+      font-size: 11px;
+      flex-direction: column;
+      gap: 4px;
+      border-radius: 8px;
+      justify-content: center;
+      align-items: center;
+      line-height: 1;
+    }
+    
+    .tab-btn .material-symbols-outlined {
+      font-size: 18px;
+    }
+    
+    .tab-content {
+      padding: 20px 16px;
+      border-radius: 16px;
+      border-color: rgba(255,255,255,0.06);
+    }
+    
+    .btn-primary {
+      width: 100%;
+      justify-content: center;
+      padding: 14px 20px;
+      font-size: 13px;
+      border-radius: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-hint {
+      font-size: 11px;
+    }
+    
+    .section-title {
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .bulk-counter {
+      padding: 10px 12px;
+      gap: 10px;
+    }
+    
+    .bulk-counter-icon {
+      width: 32px;
+      height: 32px;
+    }
+    
+    .bulk-counter-value {
+      font-size: 14px;
+    }
+    
+    /* Optimize date-picker native style overrides on iOS and Android */
+    input[type="datetime-local"] {
+      font-size: 13px;
+      padding-right: 12px;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .tab-btn {
+      font-size: 10px;
+      padding: 6px 4px;
+    }
+    .tab-btn .material-symbols-outlined {
+      font-size: 16px;
+    }
+  }
 </style>
 </head>
 <body>
