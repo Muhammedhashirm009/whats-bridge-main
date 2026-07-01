@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dashboard | WhatsBridge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "surface-container-lowest": "#ffffff", "surface": "#f7f9fc", "primary": "#00453d",
+          "on-primary": "#ffffff", "on-error-container": "#93000a", "background": "#f7f9fc",
+          "outline": "#6f7976", "primary-fixed": "#a8f0e3", "primary-container": "#075e54",
+          "surface-container-high": "#e6e8eb", "on-surface": "#191c1e", "error": "#ba1a1a",
+          "surface-container-highest": "#e0e3e6", "surface-container-low": "#f2f4f7",
+          "secondary-container": "#5dfd8a", "surface-variant": "#e0e3e6", "on-secondary": "#ffffff",
+          "error-container": "#ffdad6", "surface-container": "#eceef1",
+          "on-surface-variant": "#3f4946", "outline-variant": "#bec9c5",
+          "on-primary-container": "#8dd5c8", "secondary": "#006d2f",
+          "on-secondary-container": "#007232", "on-primary-fixed": "#00201c",
+          "tertiary-fixed": "#ffdbd0", "on-tertiary-fixed": "#380d02", "on-tertiary-fixed-variant": "#6f3725"
+        },
+        fontFamily: { "headline": ["Manrope"], "body": ["Inter"], "label": ["Inter"] },
+        borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+      },
+    },
+  }
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .glass-nav { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
+</style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col h-screen sticky top-0 py-6 px-4 w-64 border-r border-slate-100 bg-slate-50">
+<div class="px-4 mb-8">
+  <div class="flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white">
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">qr_code_2</span>
+    </div>
+    <div>
+      <h1 class="text-lg font-extrabold text-emerald-950 leading-tight">WhatsBridge</h1>
+      <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">by ERPAGENT</p>
+    </div>
+  </div>
+</div>
+<!-- Status Indicator -->
+<div class="px-4 mb-4">
+  <div class="flex items-center gap-2 px-3 py-2 bg-surface-container-high rounded-xl">
+    <div id="status-dot" class="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse"></div>
+    <span id="status-text" class="text-xs font-semibold text-on-surface-variant">Checking...</span>
+  </div>
+</div>
+<nav class="flex-1 space-y-1">
+  <a class="relative flex items-center px-4 py-3 text-emerald-700 font-semibold before:absolute before:left-0 before:w-1 before:h-8 before:bg-emerald-600 before:rounded-r-full bg-emerald-50/50" href="/">
+    <span class="material-symbols-outlined mr-3">dashboard</span> Dashboard
+  </a>
+  <a class="flex items-center px-4 py-3 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-300" href="/connect">
+    <span class="material-symbols-outlined mr-3">qr_code_2</span> Connect
+  </a>
+  <a class="flex items-center px-4 py-3 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-300" href="/messages">
+    <span class="material-symbols-outlined mr-3">history_edu</span> Messages
+  </a>
+  <a class="flex items-center px-4 py-3 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-300" href="/chat">
+    <span class="material-symbols-outlined mr-3">chat_bubble</span> Chat
+  </a>
+  <a class="flex items-center px-4 py-3 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-300" href="/api-keys">
+    <span class="material-symbols-outlined mr-3">key</span> API Keys
+  </a>
+</nav>
+<div class="mt-auto px-4 space-y-4">
+  <a href="/messages" class="w-full bg-primary text-white py-3 rounded-xl font-semibold shadow-lg shadow-emerald-900/10 hover:shadow-emerald-900/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+    <span class="material-symbols-outlined text-sm">send</span> New Message
+  </a>
+</div>
+</aside>
+
+<!-- Main Content -->
+<main class="flex-1 p-6 md:p-12 overflow-y-auto">
+<header class="flex justify-between items-end mb-12">
+  <div>
+    <h2 class="text-4xl font-headline font-extrabold text-primary tracking-tight">Overview</h2>
+    <p class="text-on-surface-variant font-medium mt-1">Real-time statistics for your WhatsApp bot operations.</p>
+  </div>
+</header>
+
+<!-- Stats Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+  <!-- Messages Sent -->
+  <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(25,28,30,0.04)] flex flex-col justify-between h-44 relative overflow-hidden">
+    <div class="flex justify-between items-start">
+      <span id="metric-sent" class="text-5xl font-headline font-extrabold text-primary tracking-tighter">-</span>
+      <div class="p-2 bg-secondary/10 rounded-lg text-secondary">
+        <span class="material-symbols-outlined">check_circle</span>
+      </div>
+    </div>
+    <p class="text-label-md font-semibold text-on-surface-variant uppercase tracking-widest text-[10px] self-end">Messages Sent</p>
+  </div>
+  <!-- Pending Queue -->
+  <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(25,28,30,0.04)] flex flex-col justify-between h-44">
+    <div class="flex justify-between items-start">
+      <span id="metric-scheduled" class="text-5xl font-headline font-extrabold text-primary tracking-tighter">-</span>
+      <div class="p-2 bg-yellow-500/10 rounded-lg text-yellow-600">
+        <span class="material-symbols-outlined">schedule</span>
+      </div>
+    </div>
+    <p class="text-label-md font-semibold text-on-surface-variant uppercase tracking-widest text-[10px] self-end">Pending Queue</p>
+  </div>
+  <!-- Failed -->
+  <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_20px_40px_rgba(25,28,30,0.04)] flex flex-col justify-between h-44 border-b-4 border-error/20">
+    <div class="flex justify-between items-start">
+      <span id="metric-failed" class="text-5xl font-headline font-extrabold text-error tracking-tighter">-</span>
+      <div class="p-2 bg-error/10 rounded-lg text-error">
+        <span class="material-symbols-outlined">error</span>
+      </div>
+    </div>
+    <p class="text-label-md font-semibold text-on-surface-variant uppercase tracking-widest text-[10px] self-end">Failed Deliveries</p>
+  </div>
+</section>
+
+<!-- Quick Actions -->
+<section>
+  <h3 class="text-xl font-headline font-bold text-primary mb-6 px-2">Quick Actions</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <a href="/messages" class="flex items-center p-6 bg-primary text-on-primary rounded-2xl group hover:shadow-xl hover:shadow-emerald-950/20 transition-all duration-300">
+      <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+        <span class="material-symbols-outlined">send</span>
+      </div>
+      <div class="text-left">
+        <p class="font-bold text-lg leading-none">Send Message</p>
+        <p class="text-white/60 text-xs mt-1">Single or bulk dispatch</p>
+      </div>
+    </a>
+    <a href="/connect" class="flex items-center p-6 bg-surface-container-low border border-outline-variant/10 rounded-2xl group hover:bg-surface-container-high transition-all duration-300">
+      <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mr-4 group-hover:rotate-6 transition-transform">
+        <span class="material-symbols-outlined text-primary">qr_code_scanner</span>
+      </div>
+      <div class="text-left">
+        <p class="font-bold text-lg text-primary leading-none">Scan QR</p>
+        <p class="text-on-surface-variant text-xs mt-1">Connect WhatsApp instance</p>
+      </div>
+    </a>
+  </div>
+</section>
+</main>
+
+<!-- Mobile Bottom Nav -->
+<nav class="md:hidden fixed bottom-0 w-full bg-white/80 backdrop-blur-md border-t border-slate-100 px-6 py-3 flex justify-between items-center z-50">
+  <a class="flex flex-col items-center text-emerald-700" href="/"><span class="material-symbols-outlined">dashboard</span><span class="text-[10px] mt-1 font-bold">Dashboard</span></a>
+  <a class="flex flex-col items-center text-slate-400" href="/connect"><span class="material-symbols-outlined">qr_code_2</span><span class="text-[10px] mt-1">Connect</span></a>
+  <a class="flex flex-col items-center text-slate-400" href="/messages"><span class="material-symbols-outlined">history_edu</span><span class="text-[10px] mt-1">Messages</span></a>
+  <a class="flex flex-col items-center text-slate-400" href="/chat"><span class="material-symbols-outlined">chat_bubble</span><span class="text-[10px] mt-1">Chat</span></a>
+</nav>
+
+<script src="js/app.js"></script>
+</body></html>

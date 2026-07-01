@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Chat | WhatsBridge by ERPAGENT</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "surface-container-lowest":"#ffffff","surface":"#f7f9fc","inverse-surface":"#2d3133",
+          "primary":"#00453d","on-primary":"#ffffff","background":"#f7f9fc","outline":"#6f7976",
+          "surface-dim":"#d8dadd","primary-fixed":"#a8f0e3","on-primary-fixed":"#00201c",
+          "on-surface":"#191c1e","error":"#ba1a1a","primary-container":"#075e54",
+          "surface-container-high":"#e6e8eb","surface-container-low":"#f2f4f7",
+          "secondary-container":"#5dfd8a","surface-variant":"#e0e3e6","on-secondary":"#ffffff",
+          "on-surface-variant":"#3f4946","outline-variant":"#bec9c5",
+          "on-primary-container":"#8dd5c8","secondary":"#006d2f","surface-container":"#eceef1",
+          "on-secondary-container":"#007232",
+        },
+        fontFamily: {"headline":["Manrope"],"body":["Inter"],"label":["Inter"]},
+        borderRadius: {"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},
+      },
+    },
+  }
+</script>
+<style>
+.material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24 }
+.chat-bg-pattern { background-color: #f7f9fc; opacity: 0.05 }
+::-webkit-scrollbar { width: 6px }
+::-webkit-scrollbar-track { background: transparent }
+::-webkit-scrollbar-thumb { background: #bec9c5; border-radius: 10px }
+</style>
+</head>
+<body class="bg-surface font-body text-on-surface flex h-screen overflow-hidden">
+<!-- Side Navigation -->
+<aside class="hidden md:flex flex-col h-full sticky top-0 py-6 px-4 w-64 border-r border-slate-100 bg-slate-50 font-medium text-sm">
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat</span>
+</div>
+<div>
+<h1 class="text-lg font-extrabold text-emerald-950 leading-none font-headline">WhatsBridge</h1>
+<p class="text-[10px] text-slate-500 uppercase tracking-widest mt-1">by ERPAGENT</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-300 rounded-lg" href="/">
+<span class="material-symbols-outlined">dashboard</span><span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-300 rounded-lg" href="/connect">
+<span class="material-symbols-outlined">qr_code_2</span><span>Connect</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-300 rounded-lg" href="/messages">
+<span class="material-symbols-outlined">history_edu</span><span>Messages</span>
+</a>
+<a class="relative flex items-center gap-3 px-4 py-3 text-emerald-700 font-semibold before:absolute before:left-0 before:w-1 before:h-8 before:bg-emerald-600 before:rounded-r-full hover:bg-emerald-50/50 transition-all duration-300" href="/chat">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat_bubble</span><span>Chat</span>
+</a>
+</nav>
+<div class="pt-6 border-t border-slate-100 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-error hover:bg-red-50/50 transition-colors rounded-lg cursor-pointer" onclick="doLogout()">
+<span class="material-symbols-outlined">logout</span><span>Logout</span>
+</a>
+</div>
+</aside>
+
+<!-- Main Content: Chat Layout -->
+<main class="flex-1 flex flex-col md:flex-row h-full overflow-hidden bg-surface">
+<!-- Left: Contact List -->
+<section id="contact-list" class="w-full md:w-80 lg:w-96 flex flex-col bg-surface-container-low border-r border-outline-variant/15">
+<div class="p-4 space-y-4 bg-surface-container-low/50 backdrop-blur-sm">
+<div class="flex items-center justify-between">
+<h2 class="text-xl font-headline font-extrabold text-primary">Contacts</h2>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+<input id="search-input" class="w-full pl-10 pr-4 py-2 bg-surface-container-high border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-outline/60" placeholder="Search by phone number..." type="text"/>
+</div>
+</div>
+<div id="contacts" class="flex-1 overflow-y-auto">
+<div class="p-8 text-center text-outline text-sm">
+<span class="material-symbols-outlined text-4xl mb-2 block opacity-40">chat_bubble_outline</span>
+Enter a phone number to start a conversation
+</div>
+</div>
+</section>
+
+<!-- Right: Chat Window -->
+<section class="flex-1 flex flex-col relative bg-surface-container-lowest overflow-hidden">
+<!-- Chat Header -->
+<header id="chat-header" class="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-md border-b border-outline-variant/10 z-10">
+<div class="flex items-center gap-4">
+<button class="md:hidden p-1 -ml-2 hover:bg-surface-container-high rounded-full" onclick="showContacts()">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">person</span>
+</div>
+<div>
+<h2 id="chat-name" class="font-headline font-bold text-on-surface leading-tight">Select a contact</h2>
+<p id="chat-status" class="text-xs text-outline">or enter a phone number</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<div id="bot-indicator" class="flex items-center gap-1 px-3 py-1 rounded-full bg-surface-container-high text-outline text-xs">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span>Checking...</span>
+</div>
+</div>
+</header>
+
+<!-- Messages Area -->
+<div id="messages" class="flex-1 overflow-y-auto p-6 space-y-4 relative">
+<div class="absolute inset-0 chat-bg-pattern pointer-events-none"></div>
+<div class="relative z-10 flex justify-center">
+<span class="px-3 py-1 bg-surface-container-high/60 backdrop-blur-sm text-[10px] font-bold text-outline rounded-full uppercase tracking-wider">Start a conversation</span>
+</div>
+</div>
+
+<!-- Input Bar -->
+<footer class="p-4 bg-white border-t border-outline-variant/10 z-10">
+<div class="flex items-center gap-3 bg-surface-container-low p-2 rounded-2xl">
+<div class="flex-1 flex items-center gap-2">
+<input id="phone-input" class="w-32 bg-transparent border-none focus:ring-0 text-sm py-1 placeholder:text-outline/60 font-mono" placeholder="91XXXXXXXXXX" type="text"/>
+<div class="w-px h-6 bg-outline-variant/30"></div>
+<input id="msg-input" class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1 placeholder:text-outline/60" placeholder="Type a message..." type="text" disabled/>
+</div>
+<button id="send-btn" class="w-10 h-10 bg-primary text-on-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed" onclick="sendMessage()" disabled>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</footer>
+</section>
+</main>
+
+<script>
+let currentPhone = '';
+let conversations = {}; // phone -> [{from, text, time}]
+
+// Check bot status
+async function checkBot() {
+    try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        const el = document.getElementById('bot-indicator');
+        if (data.connected && data.loggedIn) {
+            el.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span><span>Bot Online</span>';
+            el.className = 'flex items-center gap-1 px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs';
+        } else {
+            el.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span><span>Bot Offline</span>';
+            el.className = 'flex items-center gap-1 px-3 py-1 rounded-full bg-red-50 text-red-700 text-xs';
+        }
+    } catch(e) {
+        const el = document.getElementById('bot-indicator');
+        el.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span><span>Disconnected</span>';
+    }
+}
+
+// Phone input handler
+document.getElementById('phone-input').addEventListener('input', function() {
+    const phone = this.value.replace(/[^0-9]/g, '');
+    this.value = phone;
+    const msgInput = document.getElementById('msg-input');
+    const sendBtn = document.getElementById('send-btn');
+    if (phone.length >= 10) {
+        msgInput.disabled = false;
+        msgInput.placeholder = 'Type a message...';
+        sendBtn.disabled = false;
+        currentPhone = phone;
+        document.getElementById('chat-name').textContent = phone;
+        document.getElementById('chat-status').textContent = 'WhatsApp';
+        loadConversation(phone);
+    } else {
+        msgInput.disabled = true;
+        sendBtn.disabled = true;
+    }
+});
+
+document.getElementById('msg-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+async function sendMessage() {
+    const phone = currentPhone;
+    const msgInput = document.getElementById('msg-input');
+    const msg = msgInput.value.trim();
+    if (!phone || !msg) return;
+
+    msgInput.value = '';
+
+    // Add to local conversation
+    if (!conversations[phone]) conversations[phone] = [];
+    const entry = { from: 'me', text: msg, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) };
+    conversations[phone].push(entry);
+    renderMessages(phone);
+    updateContactList();
+
+    // Send via API
+    try {
+        const res = await fetch('/api/send', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ to: phone, message: msg }),
+        });
+        const data = await res.json();
+        if (!data.success) {
+            entry.error = data.error || 'Send failed';
+            renderMessages(phone);
+        } else {
+            entry.sent = true;
+            renderMessages(phone);
+        }
+    } catch(e) {
+        entry.error = 'Network error';
+        renderMessages(phone);
+    }
+}
+
+function loadConversation(phone) {
+    renderMessages(phone);
+    updateContactList();
+}
+
+function renderMessages(phone) {
+    const container = document.getElementById('messages');
+    const msgs = conversations[phone] || [];
+
+    if (msgs.length === 0) {
+        container.innerHTML = `
+            <div class="absolute inset-0 chat-bg-pattern pointer-events-none"></div>
+            <div class="relative z-10 flex justify-center">
+                <span class="px-3 py-1 bg-surface-container-high/60 backdrop-blur-sm text-[10px] font-bold text-outline rounded-full uppercase tracking-wider">Send your first message</span>
+            </div>`;
+        return;
+    }
+
+    let html = '<div class="absolute inset-0 chat-bg-pattern pointer-events-none"></div>';
+    msgs.forEach(m => {
+        if (m.from === 'me') {
+            html += `
+            <div class="flex justify-end relative z-10">
+                <div class="max-w-[70%] bg-primary-container p-3 rounded-2xl rounded-tr-none shadow-md">
+                    <p class="text-sm text-on-primary-container leading-relaxed">${escapeHtml(m.text)}</p>
+                    <div class="flex justify-end items-center gap-1 mt-1">
+                        <span class="text-[9px] text-on-primary-container/60 uppercase font-bold">${m.time}</span>
+                        ${m.error ? '<span class="material-symbols-outlined text-[14px] text-red-300" title="'+escapeHtml(m.error)+'">error</span>' :
+                          m.sent ? '<span class="material-symbols-outlined text-[14px] text-on-primary-container/60" style="font-variation-settings: \'FILL\' 1;">done_all</span>' :
+                          '<span class="material-symbols-outlined text-[14px] text-on-primary-container/40 animate-spin">progress_activity</span>'}
+                    </div>
+                </div>
+            </div>`;
+        } else {
+            html += `
+            <div class="flex justify-start relative z-10">
+                <div class="max-w-[70%] bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-outline-variant/5">
+                    <p class="text-sm text-on-surface leading-relaxed">${escapeHtml(m.text)}</p>
+                    <div class="flex justify-end mt-1">
+                        <span class="text-[9px] text-outline uppercase font-bold">${m.time}</span>
+                    </div>
+                </div>
+            </div>`;
+        }
+    });
+    container.innerHTML = html;
+    container.scrollTop = container.scrollHeight;
+}
+
+function updateContactList() {
+    const container = document.getElementById('contacts');
+    const phones = Object.keys(conversations).filter(p => conversations[p].length > 0);
+    if (phones.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-outline text-sm">
+            <span class="material-symbols-outlined text-4xl mb-2 block opacity-40">chat_bubble_outline</span>
+            Enter a phone number to start a conversation
+        </div>`;
+        return;
+    }
+
+    let html = '';
+    phones.forEach(phone => {
+        const msgs = conversations[phone];
+        const last = msgs[msgs.length - 1];
+        const isActive = phone === currentPhone;
+        html += `
+        <div class="flex items-center gap-3 p-4 cursor-pointer transition-all ${isActive ? 'bg-surface-container-lowest border-l-4 border-secondary' : 'hover:bg-surface-container-high/50'}" onclick="selectContact('${phone}')">
+            <div class="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-primary">person</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-baseline mb-0.5">
+                    <h3 class="font-semibold text-on-surface truncate font-mono text-sm">${phone}</h3>
+                    <span class="text-[10px] text-outline">${last.time}</span>
+                </div>
+                <p class="text-xs text-outline truncate">${escapeHtml(last.text)}</p>
+            </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+function selectContact(phone) {
+    currentPhone = phone;
+    document.getElementById('phone-input').value = phone;
+    document.getElementById('msg-input').disabled = false;
+    document.getElementById('send-btn').disabled = false;
+    document.getElementById('chat-name').textContent = phone;
+    document.getElementById('chat-status').textContent = 'WhatsApp';
+    renderMessages(phone);
+    updateContactList();
+}
+
+function escapeHtml(text) {
+    const d = document.createElement('div');
+    d.textContent = text;
+    return d.innerHTML;
+}
+
+async function doLogout() {
+    await fetch('/api/auth/logout', {method:'POST'});
+    window.location.href = '/login';
+}
+
+// Init
+checkBot();
+setInterval(checkBot, 15000);
+</script>
+</body></html>

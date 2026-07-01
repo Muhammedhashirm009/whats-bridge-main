@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Connect Device | WhatsBridge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "surface-container-lowest": "#ffffff", "surface": "#f7f9fc", "primary": "#00453d",
+          "on-primary": "#ffffff", "on-error-container": "#93000a", "background": "#f7f9fc",
+          "outline": "#6f7976", "primary-fixed": "#a8f0e3", "primary-container": "#075e54",
+          "surface-container-high": "#e6e8eb", "on-surface": "#191c1e", "error": "#ba1a1a",
+          "surface-container-highest": "#e0e3e6", "surface-container-low": "#f2f4f7",
+          "secondary-container": "#5dfd8a", "surface-variant": "#e0e3e6",
+          "error-container": "#ffdad6", "surface-container": "#eceef1",
+          "on-surface-variant": "#3f4946", "outline-variant": "#bec9c5",
+          "on-primary-container": "#8dd5c8", "secondary": "#006d2f",
+          "on-secondary-container": "#007232", "on-primary-fixed": "#00201c"
+        },
+        fontFamily: { "headline": ["Manrope"], "body": ["Inter"], "label": ["Inter"] },
+        borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+      },
+    },
+  }
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .glass-panel { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
+</style>
+</head>
+<body class="bg-surface font-body text-on-surface flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col h-screen sticky top-0 py-6 px-4 w-64 border-r border-slate-100 bg-slate-50">
+<div class="mb-10 px-2 flex items-center gap-3">
+  <div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center">
+    <span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">qr_code_2</span>
+  </div>
+  <div>
+    <h1 class="text-lg font-extrabold text-emerald-950 leading-tight">WhatsBridge</h1>
+    <p class="text-[10px] text-slate-500 uppercase tracking-widest">by ERPAGENT</p>
+  </div>
+</div>
+<!-- Status Indicator -->
+<div class="px-2 mb-4">
+  <div class="flex items-center gap-2 px-3 py-2 bg-surface-container-high rounded-xl">
+    <div id="status-dot" class="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse"></div>
+    <span id="status-text" class="text-xs font-semibold text-on-surface-variant">Checking...</span>
+  </div>
+</div>
+<nav class="flex-1 space-y-2">
+  <a class="flex items-center text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 px-3 py-2.5 rounded-xl transition-all" href="/">
+    <span class="material-symbols-outlined mr-3">dashboard</span><span>Dashboard</span>
+  </a>
+  <a class="relative flex items-center text-emerald-700 font-semibold before:absolute before:left-[-16px] before:w-1 before:h-8 before:bg-emerald-600 before:rounded-r-full px-3 py-2.5 rounded-xl" href="/connect">
+    <span class="material-symbols-outlined mr-3">qr_code_2</span><span>Connect</span>
+  </a>
+  <a class="flex items-center text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 px-3 py-2.5 rounded-xl transition-all" href="/messages">
+    <span class="material-symbols-outlined mr-3">history_edu</span><span>Messages</span>
+  </a>
+  <a class="flex items-center text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 px-3 py-2.5 rounded-xl transition-all" href="/chat">
+    <span class="material-symbols-outlined mr-3">chat_bubble</span><span>Chat</span>
+  </a>
+</nav>
+<div class="mt-auto space-y-2 border-t border-slate-100 pt-6">
+  <a href="/messages" class="w-full bg-primary text-on-primary py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all mb-6">
+    <span class="material-symbols-outlined text-sm">add</span> New Message
+  </a>
+</div>
+</aside>
+
+<!-- Main Content -->
+<main class="flex-1 p-6 md:p-12 max-w-7xl mx-auto w-full">
+<div class="mb-12">
+  <h1 class="text-4xl font-extrabold font-headline text-on-surface tracking-tight mb-2">Connect Device</h1>
+  <p class="text-on-surface-variant max-w-lg">Securely link your WhatsApp account to enable automated flows and messaging.</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+  <!-- QR Section (Logged Out View) -->
+  <div id="logged-out-view" class="hidden lg:col-span-8 bg-surface-container-lowest rounded-xl p-8 shadow-[0_20px_40px_rgba(25,28,30,0.06)] flex flex-col md:flex-row gap-10">
+    <div class="flex-shrink-0 flex flex-col items-center">
+      <div class="relative p-4 bg-white border border-outline-variant/20 rounded-xl shadow-inner mb-4">
+        <div id="qr-loading" class="w-64 h-64 bg-slate-50 flex items-center justify-center rounded-lg">
+          <div class="flex flex-col items-center gap-4">
+            <span class="material-symbols-outlined text-6xl text-primary animate-pulse">qr_code_scanner</span>
+            <p class="text-sm text-outline">Generating QR Code...</p>
+          </div>
+        </div>
+        <div id="qr-display" class="hidden">
+          <img id="qr-image" src="" alt="WhatsApp QR Code" class="w-64 h-64 rounded-lg"/>
+        </div>
+        <div id="qr-error" class="hidden w-64 h-64 flex flex-col items-center justify-center gap-4">
+          <span class="material-symbols-outlined text-4xl text-error">error</span>
+          <p class="text-sm text-error font-medium">Failed to load QR code</p>
+          <button id="retryQRBtn" class="px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-semibold">Retry</button>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 px-4 py-2 bg-secondary-container/30 rounded-full text-on-secondary-container text-sm font-medium">
+        <span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+        Waiting for scan...
+      </div>
+    </div>
+    <div class="flex-1 py-2">
+      <h2 class="text-2xl font-bold font-headline mb-6 text-emerald-950">Link a New Device</h2>
+      <ul class="space-y-6">
+        <li class="flex gap-4">
+          <span class="flex-shrink-0 w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold text-sm">1</span>
+          <div><p class="font-semibold">Open WhatsApp</p><p class="text-sm text-on-surface-variant">Launch WhatsApp on your phone.</p></div>
+        </li>
+        <li class="flex gap-4">
+          <span class="flex-shrink-0 w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold text-sm">2</span>
+          <div><p class="font-semibold">Navigate to Settings</p><p class="text-sm text-on-surface-variant">Tap Menu (Android) or Settings (iOS).</p></div>
+        </li>
+        <li class="flex gap-4">
+          <span class="flex-shrink-0 w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold text-sm">3</span>
+          <div><p class="font-semibold">Select Linked Devices</p><p class="text-sm text-on-surface-variant">Tap Linked Devices then Link a Device.</p></div>
+        </li>
+        <li class="flex gap-4">
+          <span class="flex-shrink-0 w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold text-sm">4</span>
+          <div><p class="font-semibold">Scan QR Code</p><p class="text-sm text-on-surface-variant">Point your phone at this screen.</p></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Connected View -->
+  <div id="logged-in-view" class="hidden lg:col-span-8 bg-surface-container-lowest rounded-xl p-8 shadow-[0_20px_40px_rgba(25,28,30,0.06)]">
+    <div class="text-center py-8">
+      <div class="w-20 h-20 bg-secondary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+        <span class="material-symbols-outlined text-5xl text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+      </div>
+      <h2 class="text-2xl font-headline font-bold text-on-surface mb-2">WhatsApp Connected</h2>
+      <p class="text-on-surface-variant mb-8">The bot is authenticated and ready to handle messages.</p>
+      <div class="flex gap-4 justify-center">
+        <button id="disconnectBtn" class="px-6 py-3 bg-surface-container-high text-on-surface font-semibold rounded-xl hover:bg-surface-container-highest transition-all">Disconnect</button>
+        <button id="logoutBtn" class="px-6 py-3 bg-error-container text-on-error-container font-semibold rounded-xl hover:bg-error/20 transition-all">Logout (Clear Session)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Disconnected View -->
+  <div id="disconnected-view" class="hidden lg:col-span-8 bg-surface-container-lowest rounded-xl p-8 shadow-[0_20px_40px_rgba(25,28,30,0.06)]">
+    <div class="text-center py-8">
+      <div class="w-20 h-20 bg-yellow-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+        <span class="material-symbols-outlined text-5xl text-yellow-600">wifi_off</span>
+      </div>
+      <h2 class="text-2xl font-headline font-bold text-on-surface mb-2">Session Exists but Disconnected</h2>
+      <p class="text-on-surface-variant mb-8">The bot has a saved session but is not connected.</p>
+      <button id="connectBtn" class="px-8 py-3 bg-primary text-on-primary font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">Reconnect</button>
+    </div>
+  </div>
+
+  <!-- Side Panel -->
+  <div class="lg:col-span-4 flex flex-col gap-6">
+    <div class="bg-gradient-to-br from-primary to-primary-container p-6 rounded-xl text-white">
+      <h4 class="font-bold mb-2">Security Tip</h4>
+      <p class="text-sm opacity-90 leading-relaxed mb-4">Always ensure you're connecting to the official WhatsBridge dashboard. Log out of unfamiliar devices immediately.</p>
+      <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+        <span class="material-symbols-outlined text-sm">verified_user</span> End-to-End Encrypted
+      </div>
+    </div>
+    <!-- Metrics -->
+    <div class="grid grid-cols-2 gap-3">
+      <div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/10">
+        <span class="block text-2xl font-headline font-bold text-primary mb-1">99.9%</span>
+        <span class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Uptime</span>
+      </div>
+      <div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/10">
+        <span class="block text-2xl font-headline font-bold text-primary mb-1">24/7</span>
+        <span class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Sync</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="connFeedback" class="hidden mt-6 px-4 py-3 rounded-xl text-sm font-medium text-center"></div>
+</main>
+
+<!-- Mobile Bottom Nav -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md px-6 py-3 flex justify-around items-center border-t border-slate-100 z-50">
+  <a href="/"><span class="material-symbols-outlined text-slate-400">dashboard</span></a>
+  <a href="/connect"><span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">qr_code_2</span></a>
+  <a href="/messages"><span class="material-symbols-outlined text-slate-400">history_edu</span></a>
+  <a href="/chat"><span class="material-symbols-outlined text-slate-400">chat_bubble</span></a>
+</nav>
+<script src="js/app.js"></script>
+</body></html>

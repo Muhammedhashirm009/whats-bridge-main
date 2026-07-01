@@ -1,0 +1,27 @@
+*.exe
+*.db
+*.db-shm
+*.db-wal
+*.log
+*.crt
+*.key
+setup.iss
+build.ps1
+revolt-connect-installer.exe
+.git
+.gitignore
+.dockerignore
+README.md
+service.log
+temp_*
+.DS_Store
+
+# UI templates (not needed in production)
+ui/
+
+# Reference app
+the app which uses current setup to sent the messages/
+
+# Build artifacts
+whatsbridge
+whatsbridge.exe

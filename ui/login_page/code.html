@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login | WhatsAutomate</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-lowest": "#ffffff",
+              "surface": "#f7f9fc",
+              "inverse-surface": "#2d3133",
+              "primary": "#00453d",
+              "on-primary": "#ffffff",
+              "on-error-container": "#93000a",
+              "background": "#f7f9fc",
+              "on-tertiary-fixed": "#380d02",
+              "outline": "#6f7976",
+              "surface-dim": "#d8dadd",
+              "tertiary": "#622d1b",
+              "surface-bright": "#f7f9fc",
+              "primary-fixed": "#a8f0e3",
+              "on-primary-fixed-variant": "#005047",
+              "tertiary-container": "#7e4330",
+              "surface-container-high": "#e6e8eb",
+              "on-secondary-fixed-variant": "#005322",
+              "on-primary-fixed": "#00201c",
+              "on-surface": "#191c1e",
+              "error": "#ba1a1a",
+              "primary-container": "#075e54",
+              "surface-container-highest": "#e0e3e6",
+              "surface-container-low": "#f2f4f7",
+              "secondary-container": "#5dfd8a",
+              "on-tertiary-fixed-variant": "#6f3725",
+              "surface-variant": "#e0e3e6",
+              "on-secondary": "#ffffff",
+              "primary-fixed-dim": "#8cd4c7",
+              "tertiary-fixed-dim": "#ffb59e",
+              "on-tertiary": "#ffffff",
+              "error-container": "#ffdad6",
+              "on-tertiary-container": "#ffb69f",
+              "surface-container": "#eceef1",
+              "on-background": "#191c1e",
+              "on-surface-variant": "#3f4946",
+              "inverse-on-surface": "#eff1f4",
+              "on-secondary-container": "#007232",
+              "on-error": "#ffffff",
+              "outline-variant": "#bec9c5",
+              "inverse-primary": "#8cd4c7",
+              "on-primary-container": "#8dd5c8",
+              "secondary-fixed": "#66ff8e",
+              "surface-tint": "#1c695f",
+              "secondary": "#006d2f",
+              "secondary-fixed-dim": "#3de273",
+              "on-secondary-fixed": "#002109",
+              "tertiary-fixed": "#ffdbd0"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+        }
+        .editorial-shadow {
+            box-shadow: 0 20px 40px rgba(25, 28, 30, 0.06);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+<!-- Background Decoration Elements (Digital Concierge Aesthetic) -->
+<div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-fixed/30 rounded-full blur-[120px] pointer-events-none"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-secondary-container/20 rounded-full blur-[100px] pointer-events-none"></div>
+<main class="w-full max-w-[440px] z-10">
+<!-- Logo Section -->
+<div class="flex flex-col items-center mb-10">
+<div class="w-14 h-14 bg-primary rounded-xl flex items-center justify-center mb-4 editorial-shadow">
+<span class="material-symbols-outlined text-on-primary text-3xl" style="font-variation-settings: 'FILL' 1;">qr_code_2</span>
+</div>
+<h1 class="font-headline font-extrabold text-2xl text-primary tracking-tight">WhatsAutomate</h1>
+<p class="text-on-surface-variant font-medium text-sm mt-1">Your Digital Concierge Dashboard</p>
+</div>
+<!-- Login Card -->
+<div class="surface-container-lowest glass-panel rounded-xl p-8 editorial-shadow border border-white/20">
+<h2 class="font-headline font-bold text-xl text-on-surface mb-2">Welcome Back</h2>
+<p class="text-on-surface-variant text-sm mb-8">Secure access to your automated messaging hub.</p>
+<form action="#" class="space-y-6" method="POST">
+<!-- Email Input -->
+<div class="space-y-2">
+<label class="block text-xs font-semibold uppercase tracking-wider text-outline" for="email">Email Address</label>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline group-focus-within:text-primary transition-colors text-xl">mail</span>
+</div>
+<input class="w-full pl-11 pr-4 py-3 bg-surface-container-high border-none rounded-lg text-on-surface placeholder:text-outline/60 focus:ring-2 focus:ring-primary/20 transition-all outline-none" id="email" name="email" placeholder="alex@example.com" required="" type="email"/>
+</div>
+</div>
+<!-- Password Input -->
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="block text-xs font-semibold uppercase tracking-wider text-outline" for="password">Password</label>
+<a class="text-xs font-semibold text-secondary hover:text-primary transition-colors" href="#">Forgot password?</a>
+</div>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline group-focus-within:text-primary transition-colors text-xl">lock</span>
+</div>
+<input class="w-full pl-11 pr-4 py-3 bg-surface-container-high border-none rounded-lg text-on-surface placeholder:text-outline/60 focus:ring-2 focus:ring-primary/20 transition-all outline-none" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+<div class="absolute inset-y-0 right-0 pr-4 flex items-center">
+<button class="text-outline hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined text-xl">visibility</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Remember Me -->
+<div class="flex items-center">
+<input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer" id="remember" name="remember" type="checkbox"/>
+<label class="ml-2 text-sm text-on-surface-variant cursor-pointer select-none" for="remember">Keep me logged in for 30 days</label>
+</div>
+<!-- Log In Button -->
+<button class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-semibold rounded-lg editorial-shadow hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2" type="submit">
+                    Log In
+                    <span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+</form>
+<!-- Social Login Alternative -->
+<div class="mt-8 pt-8 border-t border-outline-variant/15 text-center">
+<span class="px-4 text-xs font-semibold uppercase tracking-widest text-outline bg-surface-container-lowest relative -top-10">Or connect with</span>
+<div class="grid grid-cols-2 gap-4 mt-[-10px]">
+<button class="flex items-center justify-center py-2.5 px-4 rounded-lg bg-surface border border-outline-variant/20 hover:bg-surface-container-high transition-colors text-sm font-medium text-on-surface">
+<img class="w-5 h-5 mr-2" data-alt="Official Google logo icon clean vector" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQKpT5YREPg-Se6wntowJaEhs3O57nF4fbZ8rHBjG7B0hV3e_oWNscomsCrJSJeHTdBgYkhLF-tdsnaAxgXuiIl7qKqY6uo3AZQMdr_BDGmHJtAQOIrenvXLaqGXlAvbIlcohqvZKBrzg9LmCJC5IucWSLagJGfCS-IelcV0FyoPQuZl0FkxRiQeA1TEZr8dLPQCMXj-bTspP5tcQ9KAUf06Al7nyMkxshSldpkeOvPmyhElCj-aVEd4RWWaXfHQm719uHjAfGN-o"/>
+                        Google
+                    </button>
+<button class="flex items-center justify-center py-2.5 px-4 rounded-lg bg-surface border border-outline-variant/20 hover:bg-surface-container-high transition-colors text-sm font-medium text-on-surface">
+<img class="w-5 h-5 mr-2" data-alt="Official GitHub logo icon minimalist black vector" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAb1-tmSkPPvePwRQGppzryKyeA9W0pi5oVEcogqlXXpA8abz3cOSoarViEMjtPjlOEXmGdCYHR4xMAErzTYPyDzwfClRXMXr1IjXPXKME5I1BEFHhvL2LsTdAssdYPHroeuLh8YYzY2qy8_JAMTb3Cq4jDxqarWrFv0Qd1siOAYFhSTwOF5oaLyknBfCdtRF6F0Wb2UK7X0fqLY0zgZ4akK1e1UoWRKWgquRTXsqyOMLEFiELDsijDncxbcZrfjPPMIixF2rBfGvg"/>
+                        GitHub
+                    </button>
+</div>
+</div>
+</div>
+<!-- Footer / Sign Up Link -->
+<p class="text-center mt-8 text-on-surface-variant text-sm">
+            Don't have an account yet? 
+            <a class="font-bold text-primary hover:text-secondary transition-colors underline decoration-primary/20 underline-offset-4" href="#">Create an account</a>
+</p>
+<!-- Trust Badges -->
+<div class="mt-12 flex justify-center gap-6 opacity-40 grayscale hover:opacity-80 transition-opacity">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-lg">verified_user</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">AES-256 Secured</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-lg">privacy_tip</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">GDPR Compliant</span>
+</div>
+</div>
+</main>
+<!-- Side Graphic (Desktop only aesthetic anchor) -->
+<div class="hidden xl:flex absolute top-1/2 right-20 -translate-y-1/2 flex-col gap-4 pointer-events-none">
+<div class="surface-container-lowest glass-panel p-4 rounded-xl editorial-shadow border border-white/20 w-64 translate-x-12">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container text-sm">auto_awesome</span>
+</div>
+<div class="h-2 w-24 bg-surface-container-highest rounded-full"></div>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full mb-2"></div>
+<div class="h-2 w-3/4 bg-surface-container-highest rounded-full"></div>
+</div>
+<div class="surface-container-lowest glass-panel p-4 rounded-xl editorial-shadow border border-white/20 w-64">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-fixed text-sm">chat_bubble</span>
+</div>
+<div class="h-2 w-32 bg-surface-container-highest rounded-full"></div>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full"></div>
+</div>
+</div>
+</body></html>

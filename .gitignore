@@ -1,0 +1,24 @@
+# Binaries
+*.exe
+*.exe~
+revolt-connect-installer.exe
+
+# Databases
+*.db
+*.db-shm
+*.db-wal
+
+# Certificates
+server.crt
+server.key
+
+# Logs
+*.log
+service.log
+
+# Temporary files
+temp_*
+.DS_Store
+
+# Reference app (not part of this repo)
+the app which uses current setup to sent the messages/

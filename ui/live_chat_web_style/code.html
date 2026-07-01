@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>WhatsAutomate | Messaging Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-lowest": "#ffffff",
+              "surface": "#f7f9fc",
+              "inverse-surface": "#2d3133",
+              "primary": "#00453d",
+              "on-primary": "#ffffff",
+              "on-error-container": "#93000a",
+              "background": "#f7f9fc",
+              "on-tertiary-fixed": "#380d02",
+              "outline": "#6f7976",
+              "surface-dim": "#d8dadd",
+              "tertiary": "#622d1b",
+              "surface-bright": "#f7f9fc",
+              "primary-fixed": "#a8f0e3",
+              "on-primary-fixed-variant": "#005047",
+              "tertiary-container": "#7e4330",
+              "surface-container-high": "#e6e8eb",
+              "on-secondary-fixed-variant": "#005322",
+              "on-primary-fixed": "#00201c",
+              "on-surface": "#191c1e",
+              "error": "#ba1a1a",
+              "primary-container": "#075e54",
+              "surface-container-highest": "#e0e3e6",
+              "surface-container-low": "#f2f4f7",
+              "secondary-container": "#5dfd8a",
+              "on-tertiary-fixed-variant": "#6f3725",
+              "surface-variant": "#e0e3e6",
+              "on-secondary": "#ffffff",
+              "primary-fixed-dim": "#8cd4c7",
+              "tertiary-fixed-dim": "#ffb59e",
+              "on-tertiary": "#ffffff",
+              "error-container": "#ffdad6",
+              "on-tertiary-container": "#ffb69f",
+              "surface-container": "#eceef1",
+              "on-background": "#191c1e",
+              "on-surface-variant": "#3f4946",
+              "inverse-on-surface": "#eff1f4",
+              "on-secondary-container": "#007232",
+              "on-error": "#ffffff",
+              "outline-variant": "#bec9c5",
+              "inverse-primary": "#8cd4c7",
+              "on-primary-container": "#8dd5c8",
+              "secondary-fixed": "#66ff8e",
+              "surface-tint": "#1c695f",
+              "secondary": "#006d2f",
+              "secondary-fixed-dim": "#3de273",
+              "on-secondary-fixed": "#002109",
+              "tertiary-fixed": "#ffdbd0"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+    }
+.chat-bg-pattern {
+    background-color: #f7f9fc;
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuDNGhYO9DDf4NXfN97UvOrbKctB_Mp-Dv0yq3nCTmvgcaDsJcDCYOS1myc_878Jtr8-1OydZMwLM5Rpyq81rmKYLN7AIsUMvArPB0bX64x41W1w7CYJxOKlmgPVOTDqGHe_JOC0HWpRF-AxjgJhwShBuY_nlelQUizZLctBhcJih1Hglk94x5corUWwjKYN_Arm5jWs9n_Gg8WrINv4d7eWsX0GqjpfpNSex-8Uw6AQyy4mTKidjvYO_HAr73ybxjVsZyLh9rK8AnQ);
+    opacity: 0.05
+    }
+::-webkit-scrollbar {
+    width: 6px
+    }
+::-webkit-scrollbar-track {
+    background: transparent
+    }
+::-webkit-scrollbar-thumb {
+    background: #bec9c5;
+    border-radius: 10px
+    }</style>
+</head>
+<body class="bg-surface font-body text-on-surface flex h-screen overflow-hidden">
+<!-- SideNavBar (Shared Component) -->
+<aside class="hidden md:flex flex-col h-full sticky top-0 py-6 px-4 h-screen w-64 border-r border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-manrope font-medium text-sm">
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div>
+<h1 class="text-lg font-extrabold text-emerald-950 dark:text-white leading-none">WhatsAutomate</h1>
+<p class="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Digital Concierge</p>
+</div>
+</div>
+<button class="mb-8 w-full py-3 px-4 bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-md shadow-primary/10">
+<span class="material-symbols-outlined text-sm">add</span>
+            New Broadcast
+        </button>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-all duration-300 rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-all duration-300 rounded-lg" href="#">
+<span class="material-symbols-outlined">qr_code_2</span>
+<span>Connect</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-all duration-300 rounded-lg" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+<span>Messages</span>
+</a>
+<!-- Active State Chat -->
+<a class="relative flex items-center gap-3 px-4 py-3 text-emerald-700 dark:text-emerald-400 font-semibold before:absolute before:left-0 before:w-1 before:h-8 before:bg-emerald-600 before:rounded-r-full hover:bg-emerald-50/50 transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+<span>Chat</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-all duration-300 rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-emerald-600 transition-colors" href="#">
+<span class="material-symbols-outlined">contact_support</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-error hover:bg-error-container/20 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area: WhatsApp Style Layout -->
+<main class="flex-1 flex flex-col md:flex-row h-full overflow-hidden bg-surface">
+<!-- Left Column: Active Chats List -->
+<section class="w-full md:w-80 lg:w-96 flex flex-col bg-surface-container-low border-r border-outline-variant/15">
+<!-- Search & Filter Header -->
+<div class="p-4 space-y-4 bg-surface-container-low/50 backdrop-blur-sm">
+<div class="flex items-center justify-between">
+<h2 class="text-xl font-headline font-extrabold text-primary">Messages</h2>
+<div class="flex gap-2">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined text-outline">filter_list</span>
+</button>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined text-outline">edit_square</span>
+</button>
+</div>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-high border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-outline/60" placeholder="Search chats..." type="text"/>
+</div>
+</div>
+<!-- Chat List Scrollable -->
+<div class="flex-1 overflow-y-auto">
+<!-- Chat Item (Active) -->
+<div class="flex items-center gap-3 p-4 bg-surface-container-lowest border-l-4 border-secondary cursor-pointer hover:bg-surface-container-lowest/80 transition-all">
+<div class="relative flex-shrink-0">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="portrait of a young professional woman with a friendly smile, warm studio lighting, modern minimalist style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbhJrcjFrDKQLFhO_26hXjD2ilHp4jrdtUDcwCe0yAzQ9K1kdk5vgmltHNtuUEw2L3BMB-fi63TBqeW-M78G26JaOtZMFTzSnMYZ_9BZeyddMBP0YjOFsFNNQAB5ZxUHYrWhZACi1PeMgv3Q_-OmNkYQ6SpxGgKix75N0twtlwb6827w_MUFCE6zHOwtHSH7g-DiV6XKGBvWhxxrX7DLY4otzGhURauiShL4_e0qglCLY2t2NlMaN5zSiAjmDmQ3K2mcy0t36LQeo"/>
+<div class="absolute bottom-0 right-0 w-3 h-3 bg-secondary rounded-full border-2 border-white"></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-0.5">
+<h3 class="font-semibold text-on-surface truncate">Sarah Jenkins</h3>
+<span class="text-[10px] font-medium text-secondary">10:42 AM</span>
+</div>
+<p class="text-xs text-on-surface-variant truncate">The automated sequence looks perfect, thanks!</p>
+</div>
+</div>
+<!-- Chat Item -->
+<div class="flex items-center gap-3 p-4 hover:bg-surface-container-high/50 cursor-pointer transition-all">
+<div class="relative flex-shrink-0">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="middle aged man with glasses in professional attire, soft natural window light, clean background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIfFZZYcSxFH4PeaPAAHknzuwPOomGTw2Mfqkq6T5Ed8ddKrYrP2HFOqFtuuYUssMKj7fb-uDMWF79qGIXhLaq2f72KebZ2hABIxP_BnntWm-pi0lVbc32MMRxVUEIq98jZXRFMgYdo5LgQm88-uJ-22KF1lb83eFMD9wuhvsts1VumojpCiTOsf7QSqblfvSuLZ0CDY8zaKRwfpRpCVAdxwgY_XpJXo2pMs0A0QbBF_f0T31t2t67x043ierVUz4iKNVZq2SlETw"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-0.5">
+<h3 class="font-semibold text-on-surface truncate">Marcus Chen</h3>
+<span class="text-[10px] text-outline">Yesterday</span>
+</div>
+<p class="text-xs text-outline truncate">Can we schedule the broadcast for 2 PM?</p>
+</div>
+</div>
+<!-- Chat Item -->
+<div class="flex items-center gap-3 p-4 hover:bg-surface-container-high/50 cursor-pointer transition-all">
+<div class="relative flex-shrink-0">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="smiling woman with curly hair, vibrant outdoor setting, golden hour sunlight, cheerful atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiWt9YTE_1wTpkalbY5mQIaeuLnJiOJFU1hBOu_mhbiE9eOfafWs7IjbpZX33j-yqtek2keyBryFzZrA7jXAM3aANXmJTRqxtRcGQpXCfNVTtx8zIATBm2kXCOxMhFPyagNIHqIpBX3ruGyG8pKkC0B-AAkvPIdvR6rSSUmdMNJBaBrFAWKcg4AFaSEViQOPjxUSWbUCQQkbTfMLtlNhLmJdueWDPdA7wd8Hi7XHaGTnSvMnattRoMCujGe3HAhBq6H-qw-E08HDM"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-0.5">
+<h3 class="font-semibold text-on-surface truncate">Elena Rodriguez</h3>
+<span class="text-[10px] text-outline">Yesterday</span>
+</div>
+<p class="text-xs text-outline truncate">I sent the assets to your email last night.</p>
+</div>
+</div>
+<!-- Chat Item -->
+<div class="flex items-center gap-3 p-4 hover:bg-surface-container-high/50 cursor-pointer transition-all">
+<div class="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined">groups</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-0.5">
+<h3 class="font-semibold text-on-surface truncate">Marketing Ops Squad</h3>
+<span class="text-[10px] text-outline">Monday</span>
+</div>
+<p class="text-xs text-outline truncate"><span class="font-medium">David:</span> Has the API been updated yet?</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Active Chat Window -->
+<section class="flex-1 flex flex-col relative bg-surface-container-lowest overflow-hidden">
+<!-- Chat Header -->
+<header class="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-md border-b border-outline-variant/10 z-10">
+<div class="flex items-center gap-4">
+<button class="md:hidden p-1 -ml-2 hover:bg-surface-container-high rounded-full">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="relative">
+<img class="w-10 h-10 rounded-full object-cover shadow-sm" data-alt="portrait of Sarah Jenkins, young professional woman, soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrzK63k26h66XSSM0D8hXz_t0kQo979-Otx2fr7M8HlBKIG4jqDbiEetiEO90yDKDJiB_18wUH67HrVaVv7QCe042DLSHha3OmOI4pvoh7ZgGGzUCtkzT8cY3Pl3TvY60AUWQV2ZjFmFWeGkgnPubyiemwGi6eEGYZVXdhl4Oy8hwq2RnkAED7spz0ELjasFEHf5pBaZrXB0AGIBMK-di2QqzMTlyZ9hz6dl7UE4sRu8OuW_LvN40IJauTf8xWy-hknIaZsph3obY"/>
+<div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-secondary rounded-full border-2 border-white"></div>
+</div>
+<div>
+<h2 class="font-headline font-bold text-on-surface leading-tight">Sarah Jenkins</h2>
+<p class="text-xs text-secondary font-medium">Online</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors text-outline">
+<span class="material-symbols-outlined">videocam</span>
+</button>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors text-outline">
+<span class="material-symbols-outlined">call</span>
+</button>
+<div class="w-[1px] h-6 bg-outline-variant/20 mx-1"></div>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors text-outline">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors text-outline">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</header>
+<!-- Message Area -->
+<div class="flex-1 overflow-y-auto p-6 space-y-6 relative">
+<!-- Background Pattern Layer -->
+<div class="absolute inset-0 chat-bg-pattern pointer-events-none"></div>
+<div class="flex justify-center relative z-10">
+<span class="px-3 py-1 bg-surface-container-high/60 backdrop-blur-sm text-[10px] font-bold text-outline rounded-full uppercase tracking-wider">Today</span>
+</div>
+<!-- Received Message -->
+<div class="flex justify-start relative z-10">
+<div class="max-w-[70%] bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-outline-variant/5">
+<p class="text-sm text-on-surface leading-relaxed">Hey there! Just checking in on the automated broadcast settings we discussed this morning.</p>
+<div class="flex justify-end mt-1">
+<span class="text-[9px] text-outline uppercase font-bold">10:30 AM</span>
+</div>
+</div>
+</div>
+<!-- Sent Message -->
+<div class="flex justify-end relative z-10">
+<div class="max-w-[70%] bg-primary-container p-3 rounded-2xl rounded-tr-none shadow-md">
+<p class="text-sm text-on-primary-container leading-relaxed">Hi Sarah! I've just finalized the drip sequence. It's set to trigger as soon as a new lead tags "Concierge" in the initial chat.</p>
+<div class="flex justify-end items-center gap-1 mt-1">
+<span class="text-[9px] text-primary-container/80 uppercase font-bold">10:35 AM</span>
+<span class="material-symbols-outlined text-[14px] text-primary-container/80" style="font-variation-settings: 'FILL' 1;">done_all</span>
+</div>
+</div>
+</div>
+<!-- Received Message -->
+<div class="flex justify-start relative z-10">
+<div class="max-w-[70%] bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-outline-variant/5">
+<p class="text-sm text-on-surface leading-relaxed">The automated sequence looks perfect, thanks! Can we also add a delay of 5 minutes before the first follow-up?</p>
+<div class="flex justify-end mt-1">
+<span class="text-[9px] text-outline uppercase font-bold">10:42 AM</span>
+</div>
+</div>
+</div>
+<!-- Message Indicator (Typing) -->
+<div class="flex justify-start relative z-10">
+<div class="bg-surface-container-high/40 px-3 py-2 rounded-full flex gap-1 items-center">
+<div class="w-1 h-1 bg-outline rounded-full animate-bounce"></div>
+<div class="w-1 h-1 bg-outline rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+<div class="w-1 h-1 bg-outline rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+</div>
+</div>
+</div>
+<!-- Input Bar -->
+<footer class="p-4 bg-white border-t border-outline-variant/10 z-10">
+<div class="flex items-center gap-3 bg-surface-container-low p-2 rounded-2xl">
+<button class="p-2 text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">mood</span>
+</button>
+<button class="p-2 text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">attach_file</span>
+</button>
+<div class="flex-1">
+<input class="w-full bg-transparent border-none focus:ring-0 text-sm py-1 placeholder:text-outline/60" placeholder="Type a message" type="text"/>
+</div>
+<button class="w-10 h-10 bg-primary text-on-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</footer>
+</section>
+<!-- (Optional/Hidden) Detail Info Panel -->
+<aside class="hidden lg:flex w-72 flex-col bg-surface-container-low border-l border-outline-variant/15">
+<div class="p-6 text-center">
+<img class="w-24 h-24 rounded-2xl mx-auto object-cover shadow-lg mb-4" data-alt="large portrait of user, soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPUDdbTIGO5lD301diYLutYK2vCpX6hFCAJ5I2DDOMF7PIsvBsyzpSoc7XCRYAmOjmqgZYa0c7ac3kbFLzvDid_hRp84-UPPnAQEeyt2g16k5hMzqGMvD9gbfu1YIkr0ZIvh_ZNtGHUmWgxPdueQSq21GNuIyZarfYeNXwGzfhtO4ZcWx4wlJLKuAns3hcSG86tr-8PJVx5KnK46lQU9kCZTWZk5OjS6Yu7xjr6k4SoYfWEQNv9KoVQALF1upJW99JMetOHOzwzgA"/>
+<h2 class="text-lg font-headline font-bold text-on-surface">Sarah Jenkins</h2>
+<p class="text-xs text-outline mb-6">Marketing Director @ TechFlow</p>
+<div class="grid grid-cols-2 gap-3 mb-8">
+<button class="flex flex-col items-center gap-1 p-3 bg-surface-container-lowest rounded-xl border border-outline-variant/10 hover:border-primary/20 transition-all">
+<span class="material-symbols-outlined text-primary">person</span>
+<span class="text-[10px] font-bold text-outline uppercase">Profile</span>
+</button>
+<button class="flex flex-col items-center gap-1 p-3 bg-surface-container-lowest rounded-xl border border-outline-variant/10 hover:border-primary/20 transition-all">
+<span class="material-symbols-outlined text-primary">notifications_off</span>
+<span class="text-[10px] font-bold text-outline uppercase">Mute</span>
+</button>
+</div>
+<div class="text-left space-y-6">
+<div>
+<h3 class="text-[10px] font-bold text-outline uppercase tracking-wider mb-2">Automations Active</h3>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-secondary-container/20 text-secondary text-[10px] font-bold rounded-lg border border-secondary/10">Welcome Drip</span>
+<span class="px-2 py-1 bg-primary-container/10 text-primary text-[10px] font-bold rounded-lg border border-primary/10">Lead Scraper</span>
+</div>
+</div>
+<div>
+<h3 class="text-[10px] font-bold text-outline uppercase tracking-wider mb-2">Media &amp; Docs</h3>
+<div class="grid grid-cols-3 gap-2">
+<div class="aspect-square bg-surface-container-high rounded-lg overflow-hidden border border-outline-variant/10">
+<img class="w-full h-full object-cover opacity-80" data-alt="colorful business charts and graphs on a laptop screen" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAp8YsMVq1eP6Qh7tqV4ptWm1u0EhhezkeG5ZpnP26Jqzacy-0RJOnnQCyp5B-9Z4GrP6kWQH5axoYKMqL7BcgZhcxGY6YapCWsCmVbocl_CkU8sXA4XblKCO5EJlaMgfK5IeMvNCFoJ9lelMppYexGs4fX7YR2xnLCFRBLEJWHqJg6ImRqY3FGXiQs6x5LkaU7Gvoe_K0RQfJO_xNNyjBVAivVqjSXA_XYE6CMEst0dFDSgi5LLTch5sEPuoWmFtopahZhvooiXjw"/>
+</div>
+<div class="aspect-square bg-surface-container-high rounded-lg overflow-hidden border border-outline-variant/10">
+<img class="w-full h-full object-cover opacity-80" data-alt="data visualization dashboard showing complex analytics" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCffuBZqdEiZ5Xg8i9SQXXqMCqzDZzidOc64ZoflIpJVPBXd2gq51kaD-IHGW5d35WD4CtSfC06BlNTUvtXcqEO3aPoAcYEdPHeg8ZcvxUQ1DCLVdsZAu-1IcvNA1jVhS0XW0vIBcIHcJqQmEj8xnB8orRAmajqLyNhwUvu58nXcFYxBXdwK9Vv4cP3vVDR4FQpJwJJ1HNBKrhPRhR3x6eoys80JWkG4OGftthQf_hhLV4QauWTIyGEYWLOyY40zTVIVG0C_AP5hC8"/>
+</div>
+<div class="aspect-square bg-surface-container-high rounded-lg flex items-center justify-center border border-outline-variant/10">
+<span class="text-[10px] font-bold text-outline">+12</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</main>
+</body></html>

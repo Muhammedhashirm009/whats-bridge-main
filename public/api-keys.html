@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>API Keys | WhatsBridge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "surface-container-lowest": "#ffffff", "surface": "#f7f9fc", "primary": "#00453d",
+          "on-primary": "#ffffff", "on-error-container": "#93000a", "background": "#f7f9fc",
+          "outline": "#6f7976", "primary-fixed": "#a8f0e3", "primary-container": "#075e54",
+          "surface-container-high": "#e6e8eb", "on-surface": "#191c1e", "error": "#ba1a1a",
+          "surface-container-highest": "#e0e3e6", "surface-container-low": "#f2f4f7",
+          "secondary-container": "#5dfd8a", "surface-variant": "#e0e3e6", "on-secondary": "#ffffff",
+          "error-container": "#ffdad6", "surface-container": "#eceef1",
+          "on-surface-variant": "#3f4946", "outline-variant": "#bec9c5",
+          "on-primary-container": "#8dd5c8", "secondary": "#006d2f",
+          "on-secondary-container": "#007232", "on-primary-fixed": "#00201c",
+          "tertiary-fixed": "#ffdbd0", "on-tertiary-fixed": "#380d02", "on-tertiary-fixed-variant": "#6f3725"
+        },
+        fontFamily: { "headline": ["Manrope"], "body": ["Inter"], "label": ["Inter"] },
+        borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+      },
+    },
+  }
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .glass-nav { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeIn 0.3s ease-out; }
+  .key-reveal { font-family: 'Courier New', monospace; word-break: break-all; }
+</style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col h-screen sticky top-0 py-6 px-4 w-64 border-r border-slate-100 bg-slate-50">
+<div class="px-4 mb-8">
+  <div class="flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white">
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">qr_code_2</span>
+    </div>
+    <div>
+      <h1 class="text-lg font-extrabold text-emerald-950 leading-tight">WhatsBridge</h1>
+      <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">by ERPAGENT</p>
+    </div>
+  </div>
+</div>
+<!-- Status Indicator -->
+<div class="px-4 mb-4">
+  <div class="flex items-center gap-2 px-3 py-2 bg-surface-container-high rounded-xl">
+    <div id="status-dot" class="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse"></div>
+    <span id="status-text" class="text-xs font-semibold text-on-surface-variant">Checking...</span>
+  </div>
+</div>
+<nav class="flex-1 space-y-1">
+  <a class="flex items-center px-4 py-3 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-300" href="/">
+    <span class="material-symbols-outlined mr-3">dashboard</span> Dashboard
+  </a>
+  <a class="flex items-center px-4 py-3 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-300" href="/connect">
+    <span class="material-symbols-outlined mr-3">qr_code_2</span> Connect
+  </a>
+  <a class="flex items-center px-4 py-3 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-300" href="/messages">
+    <span class="material-symbols-outlined mr-3">history_edu</span> Messages
+  </a>
+  <a class="flex items-center px-4 py-3 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-300" href="/chat">
+    <span class="material-symbols-outlined mr-3">chat_bubble</span> Chat
+  </a>
+  <a class="relative flex items-center px-4 py-3 text-emerald-700 font-semibold before:absolute before:left-0 before:w-1 before:h-8 before:bg-emerald-600 before:rounded-r-full bg-emerald-50/50" href="/api-keys">
+    <span class="material-symbols-outlined mr-3">key</span> API Keys
+  </a>
+</nav>
+<div class="mt-auto px-4 space-y-4">
+  <a href="/messages" class="w-full bg-primary text-white py-3 rounded-xl font-semibold shadow-lg shadow-emerald-900/10 hover:shadow-emerald-900/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+    <span class="material-symbols-outlined text-sm">send</span> New Message
+  </a>
+</div>
+</aside>
+
+<!-- Main Content -->
+<main class="flex-1 p-6 md:p-12 overflow-y-auto pb-24 md:pb-12">
+<header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+  <div>
+    <h2 class="text-3xl md:text-4xl font-headline font-extrabold text-primary tracking-tight">API Keys</h2>
+    <p class="text-on-surface-variant font-medium mt-1">Manage authentication keys for external API access.</p>
+  </div>
+  <button onclick="showCreateModal()" class="bg-primary text-white px-5 py-3 rounded-xl font-semibold shadow-lg shadow-emerald-900/10 hover:shadow-emerald-900/20 active:scale-95 transition-all flex items-center gap-2">
+    <span class="material-symbols-outlined text-sm">add</span> Generate New Key
+  </button>
+</header>
+
+<!-- Info Banner -->
+<div class="bg-primary/5 border border-primary/10 rounded-2xl p-5 mb-8 flex items-start gap-3">
+  <span class="material-symbols-outlined text-primary mt-0.5">info</span>
+  <div class="text-sm text-on-surface-variant">
+    <p class="font-semibold text-primary mb-1">How API Keys Work</p>
+    <p>When you generate an API key, all external API endpoints (<code class="bg-slate-100 px-1.5 py-0.5 rounded text-xs">/api/send</code>, <code class="bg-slate-100 px-1.5 py-0.5 rounded text-xs">/api/status</code>, etc.) will require a <code class="bg-slate-100 px-1.5 py-0.5 rounded text-xs">Authorization: Bearer &lt;key&gt;</code> header. If no keys exist, endpoints remain open (no auth required).</p>
+  </div>
+</div>
+
+<!-- Keys Table -->
+<div id="keys-container" class="bg-surface-container-lowest rounded-2xl shadow-[0_20px_40px_rgba(25,28,30,0.04)] overflow-hidden">
+  <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+    <h3 class="font-headline font-bold text-lg text-primary">Active Keys</h3>
+    <span id="key-count" class="text-xs font-bold text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-full">Loading...</span>
+  </div>
+  <div id="keys-list" class="divide-y divide-slate-50">
+    <div class="p-8 text-center text-on-surface-variant">
+      <span class="material-symbols-outlined text-4xl mb-2 block text-slate-300">hourglass_empty</span>
+      Loading keys...
+    </div>
+  </div>
+</div>
+
+<!-- New Key Reveal Banner (hidden initially) -->
+<div id="new-key-banner" class="hidden mt-6 bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-6 fade-in">
+  <div class="flex items-start gap-3 mb-3">
+    <span class="material-symbols-outlined text-emerald-600">check_circle</span>
+    <div class="flex-1">
+      <p class="font-bold text-emerald-800">API Key Created Successfully!</p>
+      <p class="text-sm text-emerald-700 mt-1">Copy and save this key now — <strong>it won't be shown again</strong>.</p>
+    </div>
+    <button onclick="document.getElementById('new-key-banner').classList.add('hidden')" class="text-emerald-400 hover:text-emerald-600">
+      <span class="material-symbols-outlined text-sm">close</span>
+    </button>
+  </div>
+  <div class="flex items-center gap-2 bg-white rounded-xl p-4 border border-emerald-200">
+    <code id="new-key-value" class="key-reveal flex-1 text-sm text-emerald-900 select-all"></code>
+    <button onclick="copyKey()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-1 hover:bg-emerald-700 active:scale-95 transition-all text-sm">
+      <span class="material-symbols-outlined text-sm" id="copy-icon">content_copy</span>
+      <span id="copy-text">Copy</span>
+    </button>
+  </div>
+</div>
+</main>
+
+<!-- Create Key Modal -->
+<div id="create-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-xl font-headline font-bold text-primary">Generate API Key</h3>
+      <button onclick="hideCreateModal()" class="text-slate-400 hover:text-slate-600">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="mb-6">
+      <label class="block text-sm font-semibold text-on-surface mb-2">Key Name</label>
+      <input type="text" id="key-name-input" placeholder="e.g., Revolt Laravel, My Shop Bot" 
+             class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+             onkeydown="if(event.key==='Enter') createKey()">
+      <p class="text-xs text-on-surface-variant mt-2">A descriptive name to identify this key later.</p>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="hideCreateModal()" class="flex-1 px-4 py-3 border border-slate-200 rounded-xl font-semibold text-on-surface-variant hover:bg-slate-50 transition-all">Cancel</button>
+      <button onclick="createKey()" id="create-btn" class="flex-1 px-4 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-emerald-800 active:scale-95 transition-all flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-sm">key</span> Generate
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div id="delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-6 fade-in">
+    <div class="text-center mb-6">
+      <div class="w-14 h-14 bg-error/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <span class="material-symbols-outlined text-error text-3xl">delete_forever</span>
+      </div>
+      <h3 class="text-lg font-headline font-bold text-on-surface">Delete API Key?</h3>
+      <p class="text-sm text-on-surface-variant mt-2">This action cannot be undone. Any applications using this key will lose access.</p>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="hideDeleteModal()" class="flex-1 px-4 py-3 border border-slate-200 rounded-xl font-semibold text-on-surface-variant hover:bg-slate-50 transition-all">Cancel</button>
+      <button onclick="confirmDelete()" class="flex-1 px-4 py-3 bg-error text-white rounded-xl font-semibold hover:bg-red-700 active:scale-95 transition-all">Delete Key</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile Bottom Nav -->
+<nav class="md:hidden fixed bottom-0 w-full bg-white/80 backdrop-blur-md border-t border-slate-100 px-6 py-3 flex justify-between items-center z-50">
+  <a class="flex flex-col items-center text-slate-400" href="/"><span class="material-symbols-outlined">dashboard</span><span class="text-[10px] mt-1">Dashboard</span></a>
+  <a class="flex flex-col items-center text-slate-400" href="/connect"><span class="material-symbols-outlined">qr_code_2</span><span class="text-[10px] mt-1">Connect</span></a>
+  <a class="flex flex-col items-center text-slate-400" href="/messages"><span class="material-symbols-outlined">history_edu</span><span class="text-[10px] mt-1">Messages</span></a>
+  <a class="flex flex-col items-center text-emerald-700" href="/api-keys"><span class="material-symbols-outlined">key</span><span class="text-[10px] mt-1 font-bold">API Keys</span></a>
+</nav>
+
+<script>
+let deleteKeyId = null;
+
+async function loadKeys() {
+  try {
+    const res = await fetch('/api/keys');
+    const data = await res.json();
+    const keys = data.keys || [];
+    renderKeys(keys);
+  } catch (e) {
+    document.getElementById('keys-list').innerHTML = `
+      <div class="p-8 text-center text-error">
+        <span class="material-symbols-outlined text-4xl mb-2 block">error</span>
+        Failed to load API keys
+      </div>`;
+    document.getElementById('key-count').textContent = 'Error';
+  }
+}
+
+function renderKeys(keys) {
+  const container = document.getElementById('keys-list');
+  document.getElementById('key-count').textContent = `${keys.length} key${keys.length !== 1 ? 's' : ''}`;
+
+  if (keys.length === 0) {
+    container.innerHTML = `
+      <div class="p-12 text-center">
+        <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <span class="material-symbols-outlined text-3xl text-slate-400">key_off</span>
+        </div>
+        <p class="font-semibold text-on-surface mb-1">No API Keys</p>
+        <p class="text-sm text-on-surface-variant mb-4">Your API endpoints are currently open (no authentication required).</p>
+        <button onclick="showCreateModal()" class="text-primary font-semibold text-sm hover:underline">Generate your first key →</button>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = keys.map(k => {
+    const created = new Date(k.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const lastUsed = k.last_used_at ? new Date(k.last_used_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Never';
+    return `
+      <div class="flex items-center justify-between px-6 py-4 hover:bg-slate-50/50 transition-colors">
+        <div class="flex items-center gap-4 flex-1 min-w-0">
+          <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-primary text-sm">key</span>
+          </div>
+          <div class="min-w-0">
+            <p class="font-semibold text-on-surface truncate">${k.name}</p>
+            <p class="text-xs text-on-surface-variant mt-0.5">
+              <code class="bg-slate-100 px-1.5 py-0.5 rounded">${k.key_prefix}...••••</code>
+              <span class="mx-1.5">·</span> Created ${created}
+              <span class="mx-1.5">·</span> Last used: ${lastUsed}
+            </p>
+          </div>
+        </div>
+        <button onclick="showDeleteModal(${k.id})" class="text-slate-400 hover:text-error p-2 rounded-lg hover:bg-error/5 transition-all shrink-0" title="Delete key">
+          <span class="material-symbols-outlined text-sm">delete</span>
+        </button>
+      </div>`;
+  }).join('');
+}
+
+function showCreateModal() {
+  document.getElementById('create-modal').classList.remove('hidden');
+  document.getElementById('key-name-input').value = '';
+  setTimeout(() => document.getElementById('key-name-input').focus(), 100);
+}
+
+function hideCreateModal() {
+  document.getElementById('create-modal').classList.add('hidden');
+}
+
+async function createKey() {
+  const name = document.getElementById('key-name-input').value.trim();
+  if (!name) { document.getElementById('key-name-input').focus(); return; }
+
+  const btn = document.getElementById('create-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">progress_activity</span> Generating...';
+
+  try {
+    const res = await fetch('/api/keys/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      hideCreateModal();
+      // Show the key
+      document.getElementById('new-key-value').textContent = data.key;
+      document.getElementById('new-key-banner').classList.remove('hidden');
+      document.getElementById('copy-text').textContent = 'Copy';
+      document.getElementById('copy-icon').textContent = 'content_copy';
+      loadKeys();
+    } else {
+      alert('Error: ' + (data.error || 'Unknown error'));
+    }
+  } catch (e) {
+    alert('Failed to create key: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined text-sm">key</span> Generate';
+  }
+}
+
+function copyKey() {
+  const key = document.getElementById('new-key-value').textContent;
+  navigator.clipboard.writeText(key).then(() => {
+    document.getElementById('copy-text').textContent = 'Copied!';
+    document.getElementById('copy-icon').textContent = 'check';
+    setTimeout(() => {
+      document.getElementById('copy-text').textContent = 'Copy';
+      document.getElementById('copy-icon').textContent = 'content_copy';
+    }, 2000);
+  });
+}
+
+function showDeleteModal(id) {
+  deleteKeyId = id;
+  document.getElementById('delete-modal').classList.remove('hidden');
+}
+
+function hideDeleteModal() {
+  deleteKeyId = null;
+  document.getElementById('delete-modal').classList.add('hidden');
+}
+
+async function confirmDelete() {
+  if (!deleteKeyId) return;
+  try {
+    const res = await fetch('/api/keys/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: deleteKeyId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      loadKeys();
+    } else {
+      alert('Error: ' + (data.error || 'Failed to delete'));
+    }
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+  hideDeleteModal();
+}
+
+// Status checker
+async function checkStatus() {
+  try {
+    const r = await fetch('/api/status');
+    const d = await r.json();
+    const dot = document.getElementById('status-dot');
+    const txt = document.getElementById('status-text');
+    if (d.loggedIn) {
+      dot.className = 'w-2.5 h-2.5 rounded-full bg-green-500';
+      txt.textContent = 'Connected';
+    } else if (d.connected) {
+      dot.className = 'w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse';
+      txt.textContent = 'Connecting...';
+    } else {
+      dot.className = 'w-2.5 h-2.5 rounded-full bg-red-400';
+      txt.textContent = 'Disconnected';
+    }
+  } catch {
+    document.getElementById('status-dot').className = 'w-2.5 h-2.5 rounded-full bg-red-400';
+    document.getElementById('status-text').textContent = 'Offline';
+  }
+}
+
+loadKeys();
+checkStatus();
+setInterval(checkStatus, 10000);
+</script>
+</body></html>
