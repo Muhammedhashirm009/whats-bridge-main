@@ -76,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function checkStatus() {
         try {
             const res = await apiFetch('/api/status');
+            if (!res.ok) throw new Error(`Status endpoint returned ${res.status}`);
             const data = await res.json();
             
             isConnected = data.connected;
@@ -161,13 +162,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const res = await apiFetch('/api/qr');
+            if (!res.ok) {
+                // Server returned error (404, 500, etc.) — skip JSON parse
+                throw new Error(`QR endpoint returned ${res.status}`);
+            }
             const data = await res.json();
 
             if (data.code) {
-                // Client-side QR generation using qrcode.js
-                QRCode.toDataURL(data.code).then(url => {
-                    qrImage.src = url;
-                });
+                // Client-side QR generation using qrcode-generator
+                try {
+                    var qr = qrcode(0, 'L');
+                    qr.addData(data.code);
+                    qr.make();
+                    qrImage.src = qr.createDataURL(6, 4);
+                } catch (qrErr) {
+                    console.error('QR generation failed', qrErr);
+                }
                 qrDisplay.classList.remove('hidden');
                 qrLoading.classList.add('hidden');
                 qrError.classList.add('hidden');
