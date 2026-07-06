@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/h2non/filetype"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/lib/pq"
 	"github.com/mdp/qrterminal/v3"
 	"go.mau.fi/whatsmeow"
@@ -86,13 +87,22 @@ func InitWhatsApp() {
 		return
 	}
 
+	// Auto-configure simple protocol for PgBouncer/Neon compatibility when using pgx
+	if !strings.Contains(waPostgresDSN, "default_query_exec_mode") {
+		if strings.Contains(waPostgresDSN, "?") {
+			waPostgresDSN += "&default_query_exec_mode=simple_protocol"
+		} else {
+			waPostgresDSN += "?default_query_exec_mode=simple_protocol"
+		}
+	}
+
 	dbLog := waLog.Stdout("Database", "WARN", true)
 	var err error
 
 	// Retry database initialization until it succeeds
 	for {
 		var c *sqlstore.Container
-		c, err = sqlstore.New(context.Background(), "postgres", waPostgresDSN, dbLog)
+		c, err = sqlstore.New(context.Background(), "pgx", waPostgresDSN, dbLog)
 		if err == nil {
 			setContainer(c)
 			break
